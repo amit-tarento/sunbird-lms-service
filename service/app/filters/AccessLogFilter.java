@@ -1,6 +1,8 @@
 package filters;
 
 import akka.util.ByteString;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -8,10 +10,8 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.ProjectLogger;
-import org.sunbird.common.request.ExecutionContext;
 import org.sunbird.telemetry.util.TelemetryEvents;
 import org.sunbird.telemetry.util.TelemetryLmaxWriter;
-import org.sunbird.telemetry.util.TelemetryUtil;
 import play.libs.streams.Accumulator;
 import play.mvc.EssentialAction;
 import play.mvc.EssentialFilter;
@@ -21,14 +21,13 @@ public class AccessLogFilter extends EssentialFilter {
 
   private final Executor executor;
   private TelemetryLmaxWriter lmaxWriter;
-  private ExecutionContext executionContext;
+  private ObjectMapper objectMapper = new ObjectMapper();
 
   @Inject
   public AccessLogFilter(Executor executor) {
     super();
     this.lmaxWriter = TelemetryLmaxWriter.getInstance();
     this.executor = executor;
-    this.executionContext = ExecutionContext;
   }
 
   @Override
@@ -52,15 +51,16 @@ public class AccessLogFilter extends EssentialFilter {
                   params.put(JsonKey.DURATION, requestTime);
                   params.put(JsonKey.STATUS, result.status());
                   params.put(JsonKey.LOG_LEVEL, JsonKey.INFO);
-                  Map<String, Object> context = new HashMap();
-                  context.putAll(ExecutionContext.getCurrent().getRequestContext());
-                  context.putAll(ExecutionContext.getCurrent().getGlobalContext());
-                  // return context;
+                  String contextDetails = request.flash().get(JsonKey.CONTEXT);
+                  Map<String, Object> context =
+                      objectMapper.readValue(
+                          contextDetails, new TypeReference<Map<String, Object>>() {});
                   req.setRequest(
                       generateTelemetryRequestForController(
                           TelemetryEvents.LOG.getName(),
                           params,
-                          TelemetryUtil.getTelemetryContext()));
+                          (Map<String, Object>) context.get(JsonKey.CONTEXT)));
+                  System.out.println("code reached.");
                   lmaxWriter.submitMessage(req);
                 } catch (Exception ex) {
                   ProjectLogger.log("AccessLogFilter:apply Exception in writing telemetry", ex);
