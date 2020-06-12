@@ -245,6 +245,7 @@ public class SendMail {
   private static boolean sendEmail(
       String[] emailList, String subject, VelocityContext context, StringWriter writer) {
     boolean sentStatus = true;
+    long startTime = System.currentTimeMillis();
     try {
       if (context != null) {
         context.put(JsonKey.FROM_EMAIL, fromEmail);
@@ -271,6 +272,8 @@ public class SendMail {
       ProjectLogger.log(
           "SendMail:sendMail: Exception occurred with message = " + e.getMessage(), e);
     }
+    long timeTaken = System.currentTimeMillis() - startTime;
+    ProjectLogger.log("Total time taken for sending email:: " + timeTaken, LoggerEnum.INFO.name());
     return sentStatus;
   }
 }
