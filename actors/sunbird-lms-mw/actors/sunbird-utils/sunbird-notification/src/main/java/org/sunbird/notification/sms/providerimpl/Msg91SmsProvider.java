@@ -32,9 +32,11 @@ public class Msg91SmsProvider implements ISmsProvider {
   private static String smsMethodType = null;
   private static String authKey = null;
   private static String country = null;
+  private static CloseableHttpClient httpClient = null;
 
   static {
     boolean resposne = init();
+    httpClient = HttpClients.createDefault();
     logger.info("SMS configuration values are set ==" + resposne);
   }
 
@@ -57,6 +59,13 @@ public class Msg91SmsProvider implements ISmsProvider {
       authKey = PropertiesCache.getInstance().getProperty("sunbird.msg.91.auth");
     }
     return validateSettings();
+  }
+
+  private CloseableHttpClient getHttpClient() {
+    if (null == httpClient) {
+      httpClient = HttpClients.createDefault();
+    }
+    return httpClient;
   }
 
   @Override
@@ -105,10 +114,7 @@ public class Msg91SmsProvider implements ISmsProvider {
             + smsRoute
             + "\n");
 
-    CloseableHttpClient httpClient = null;
     try {
-      httpClient = HttpClients.createDefault();
-
       String path = null;
 
       if (validateSettings(mobileNumber, smsText)) {
@@ -148,7 +154,7 @@ public class Msg91SmsProvider implements ISmsProvider {
               new ByteArrayEntity(providerDetailsString.getBytes(StandardCharsets.UTF_8));
           httpPost.setEntity(entity);
 
-          CloseableHttpResponse response = httpClient.execute(httpPost);
+          CloseableHttpResponse response = getHttpClient().execute(httpPost);
           StatusLine sl = response.getStatusLine();
           response.close();
           if (sl.getStatusCode() != 200) {
@@ -175,8 +181,6 @@ public class Msg91SmsProvider implements ISmsProvider {
     } catch (Exception e) {
       logger.info("Msg91SmsProvider - Error in coverting providerDetails to string!");
       return false;
-    } finally {
-      closeHttpResource(httpClient);
     }
   }
 
@@ -188,9 +192,7 @@ public class Msg91SmsProvider implements ISmsProvider {
    * @return boolean
    */
   public boolean sendSmsGetMethod(String mobileNumber, String smsText) {
-    CloseableHttpClient httpClient = null;
     try {
-      httpClient = HttpClients.createDefault();
       String path = null;
       if (validateSettings(mobileNumber, smsText)) {
 
@@ -212,7 +214,7 @@ public class Msg91SmsProvider implements ISmsProvider {
 
         HttpGet httpGet = new HttpGet(path);
 
-        CloseableHttpResponse response = httpClient.execute(httpGet);
+        CloseableHttpResponse response = getHttpClient().execute(httpGet);
         StatusLine sl = response.getStatusLine();
         response.close();
         if (sl.getStatusCode() != 200) {
@@ -233,8 +235,6 @@ public class Msg91SmsProvider implements ISmsProvider {
     } catch (IOException e) {
       logger.error(e);
       return false;
-    } finally {
-      closeHttpResource(httpClient);
     }
   }
 
@@ -276,21 +276,6 @@ public class Msg91SmsProvider implements ISmsProvider {
     builder.append("&mobiles=").append(mobileNumber).append("&authkey=").append(authKey);
     builder.append("&message=").append(getDoubleEncodedSMS(smsText));
     return builder.toString();
-  }
-
-  /**
-   * This method will close the http resource.
-   *
-   * @param httpClient
-   */
-  private void closeHttpResource(CloseableHttpClient httpClient) {
-    if (httpClient != null) {
-      try {
-        httpClient.close();
-      } catch (IOException e) {
-        logger.error(e);
-      }
-    }
   }
 
   /**
@@ -356,10 +341,7 @@ public class Msg91SmsProvider implements ISmsProvider {
       logger.debug("can't sent msg with empty phone list.");
       return false;
     }
-    CloseableHttpClient httpClient = null;
     try {
-      httpClient = HttpClients.createDefault();
-
       String path = null;
       logger.debug("Inside POST");
 
@@ -391,7 +373,7 @@ public class Msg91SmsProvider implements ISmsProvider {
             new ByteArrayEntity(providerDetailsString.getBytes(StandardCharsets.UTF_8));
         httpPost.setEntity(entity);
 
-        CloseableHttpResponse response = httpClient.execute(httpPost);
+        CloseableHttpResponse response = getHttpClient().execute(httpPost);
         StatusLine sl = response.getStatusLine();
         response.close();
         if (sl.getStatusCode() != 200) {
@@ -414,8 +396,6 @@ public class Msg91SmsProvider implements ISmsProvider {
     } catch (Exception e) {
       logger.error("Msg91SmsProvider : send : error in converting providerDetails to String");
       return false;
-    } finally {
-      closeHttpResource(httpClient);
     }
   }
 
