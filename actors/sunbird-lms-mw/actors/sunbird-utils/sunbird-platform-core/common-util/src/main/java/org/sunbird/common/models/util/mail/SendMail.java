@@ -1,5 +1,10 @@
 package org.sunbird.common.models.util.mail;
 
+import com.sendgrid.*;
+import com.sendgrid.helpers.mail.Mail;
+import com.sendgrid.helpers.mail.objects.Content;
+import com.sendgrid.helpers.mail.objects.Email;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Properties;
 import javax.activation.DataHandler;
@@ -144,7 +149,11 @@ public class SendMail {
       ProjectLogger.log(
           "SendMail:sendMailWithBody : Exception occurred with message =" + e.getMessage(), e);
     }
-    return sendEmail(emailList, subject, context, writer);
+    if (null != emailList && emailList.length == 1) {
+      return sendEmailViaSendGrid(emailList[0], subject, writer);
+    } else {
+      return sendEmail(emailList, subject, context, writer);
+    }
   }
 
   /**
@@ -272,5 +281,29 @@ public class SendMail {
           "SendMail:sendMail: Exception occurred with message = " + e.getMessage(), e);
     }
     return sentStatus;
+  }
+
+  private static boolean sendEmailViaSendGrid(String email, String subject, StringWriter writer) {
+    Email from = new Email(fromEmail);
+    Email to = new Email(email);
+    Content content = new Content("text/html", writer.toString());
+    Mail mail = new Mail(from, subject, to, content);
+
+    SendGrid sg = new SendGrid(System.getenv("SENDGRID_API_KEY"));
+    com.sendgrid.Request request = new com.sendgrid.Request();
+    try {
+      request.setMethod(Method.POST);
+      request.setEndpoint("mail/send");
+      request.setBody(mail.build());
+      com.sendgrid.Response response = sg.api(request);
+      ProjectLogger.log(
+          "SendMail:sendEmailViaSendGrid : Response from sendgrid :" + response.getStatusCode(),
+          LoggerEnum.INFO.name());
+      return response.getStatusCode() == 200;
+    } catch (IOException ex) {
+      ProjectLogger.log(
+          "SendMail:sendEmailViaSendGrid : Exception occurred while sending mail via sendgrid", ex);
+    }
+    return false;
   }
 }
