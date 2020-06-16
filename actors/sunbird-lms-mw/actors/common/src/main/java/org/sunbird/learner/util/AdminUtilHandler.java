@@ -52,11 +52,6 @@ public class AdminUtilHandler {
       Map<String, String> headers = new HashMap<>();
       headers.put("Content-Type", "application/json");
 
-      /*String response = HttpUtil.sendPostRequest(
-      ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_BASE_URL) +
-              ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT),
-      body,
-      headers);*/
       String response =
           HttpClientUtil.getInstance()
               .post(
