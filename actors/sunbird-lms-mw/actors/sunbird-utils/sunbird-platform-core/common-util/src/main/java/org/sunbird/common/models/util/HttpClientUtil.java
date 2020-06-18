@@ -3,16 +3,15 @@ package org.sunbird.common.models.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.MapUtils;
 import org.apache.http.*;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -28,14 +27,7 @@ public class HttpClientUtil {
   private static HttpClientUtil httpClientUtil;
 
   private HttpClientUtil() {
-    RequestConfig defaultRequestConfig =
-        RequestConfig.custom()
-            .setSocketTimeout(25000)
-            .setConnectTimeout(25000)
-            .setConnectionRequestTimeout(25000)
-            .setContentCompressionEnabled(true)
-            .build();
-    ConnectionKeepAliveStrategy myStrategy =
+    ConnectionKeepAliveStrategy keepAliveStrategy =
         (response, context) -> {
           HeaderElementIterator it =
               new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
@@ -49,15 +41,15 @@ public class HttpClientUtil {
           }
           return 25 * 1000;
         };
-    HttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    connectionManager.setMaxTotal(2000);
+    connectionManager.setDefaultMaxPerRoute(200);
+    connectionManager.closeIdleConnections(180, TimeUnit.SECONDS);
     httpclient =
         HttpClients.custom()
-            .setConnectionManager(poolingConnManager)
+            .setConnectionManager(connectionManager)
             .useSystemProperties()
-            .setKeepAliveStrategy(myStrategy)
-            .setDefaultRequestConfig(defaultRequestConfig)
-            .setMaxConnPerRoute(100)
-            .setMaxConnTotal(500)
+            .setKeepAliveStrategy(keepAliveStrategy)
             .build();
   }
 
