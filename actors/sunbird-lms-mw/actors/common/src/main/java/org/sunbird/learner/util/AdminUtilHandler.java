@@ -16,7 +16,6 @@ import org.sunbird.models.adminutil.AdminUtilRequestData;
 import org.sunbird.models.adminutil.AdminUtilRequestPayload;
 
 public class AdminUtilHandler {
-  private static HttpClientUtil clientUtil = HttpClientUtil.getInstance();
   /**
    * Prepare payload for admin utils
    *
@@ -53,7 +52,7 @@ public class AdminUtilHandler {
       headers.put("Content-Type", "application/json");
 
       String response =
-          clientUtil.post(
+          HttpClientUtil.post(
               ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_BASE_URL)
                   + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT),
               body,
