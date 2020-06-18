@@ -42,8 +42,8 @@ public class HttpClientUtil {
           return 25 * 1000;
         };
     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-    connectionManager.setMaxTotal(2000);
-    connectionManager.setDefaultMaxPerRoute(200);
+    connectionManager.setMaxTotal(10000);
+    connectionManager.setDefaultMaxPerRoute(10000);
     connectionManager.closeIdleConnections(180, TimeUnit.SECONDS);
     httpclient =
         HttpClients.custom()
