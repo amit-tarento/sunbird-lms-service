@@ -675,7 +675,7 @@ public class ProjectUtil {
       ProjectLogger.log("start call for registering the tag ==" + tagId);
       String analyticsBaseUrl = getConfigValue(JsonKey.ANALYTICS_API_BASE_URL);
       tagStatus =
-          HttpUtil.sendPostRequest(
+          HttpClientUtil.post(
               analyticsBaseUrl
                   + PropertiesCache.getInstance().getProperty(JsonKey.EKSTEP_TAG_API_URL)
                   + "/"
