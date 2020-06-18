@@ -192,23 +192,6 @@ public class ProjectUtil {
   }
 
   /** @author Amit Kumar */
-  public enum CourseMgmtStatus {
-    DRAFT("draft"),
-    LIVE("live"),
-    RETIRED("retired");
-
-    private String value;
-
-    CourseMgmtStatus(String value) {
-      this.value = value;
-    }
-
-    public String getValue() {
-      return this.value;
-    }
-  }
-
-  /** @author Amit Kumar */
   public enum Source {
     WEB("web"),
     ANDROID("android"),

@@ -109,6 +109,24 @@ public class RequestInterceptor {
     apiHeaderIgnoreMap.put("/v1/role/read", var);
   }
 
+  private static String getUserRequestedFor(Http.Request request) {
+    String requestedForUserID = null;
+    if (StringUtils.isNotEmpty(request.body().asText())) {
+      requestedForUserID = String.valueOf(request.body().asJson().get(JsonKey.USER_ID));
+    } else {
+      String uuidSegment = null;
+      Path path = Paths.get(request.uri());
+      if (request.queryString().isEmpty()) {
+        uuidSegment = path.getFileName().toString();
+      } else {
+        String[] queryPath = path.getFileName().toString().split("\\?");
+        uuidSegment = queryPath[0];
+      }
+      requestedForUserID = UUID.fromString(uuidSegment).toString();
+    }
+    return requestedForUserID;
+  }
+
   /**
    * Authenticates given HTTP request context
    *
@@ -123,37 +141,32 @@ public class RequestInterceptor {
         request.header(HeaderParam.X_Authenticated_Client_Token.getName());
     Optional<String> authClientId = request.header(HeaderParam.X_Authenticated_Client_Id.getName());
     if (!isRequestInExcludeList(request.path()) && !isRequestPrivate(request.path())) {
+      // The API must be invoked with either access token or client token.
       if (accessToken.isPresent()) {
         clientId = AuthenticationHelper.verifyUserAccesToken(accessToken.get());
         if (!JsonKey.USER_UNAUTH_STATES.contains(clientId)) {
-          Optional<String> managedAccessToken =
-              request.header(HeaderParam.X_Authenticated_For.getName());
-          if (managedAccessToken.isPresent() && StringUtils.isNotEmpty(managedAccessToken.get())) {
-            String requestedForUserID = null;
-            if (StringUtils.isNotEmpty(request.body().asText())) {
-              requestedForUserID = String.valueOf(request.body().asJson().get(JsonKey.USER_ID));
-            } else {
-              String uuidSegment = null;
-              Path path = Paths.get(request.uri());
-              if (request.queryString().isEmpty()) {
-                uuidSegment = path.getFileName().toString();
+          // Now we have some valid token, next verify if the token is matching the request.
+          String requestedForUserID = getUserRequestedFor(request);
+          if (!requestedForUserID.equals(clientId)) {
+            // LUA - MUA user combo, check the 'for' token and its parent, child identifiers
+            Optional<String> forTokenHeader =
+                request.header(HeaderParam.X_Authenticated_For.getName());
+            String managedAccessToken = forTokenHeader.isPresent() ? forTokenHeader.get() : "";
+            if (StringUtils.isNotEmpty(managedAccessToken)) {
+              String managedFor =
+                  ManagedTokenValidator.verify(managedAccessToken, clientId, requestedForUserID);
+              if (!JsonKey.USER_UNAUTH_STATES.contains(managedFor)) {
+                request.flash().put(JsonKey.MANAGED_FOR, managedFor);
               } else {
-                String[] queryPath = path.getFileName().toString().split("\\?");
-                uuidSegment = queryPath[0];
+                clientId = JsonKey.UNAUTHORIZED;
               }
-              requestedForUserID = UUID.fromString(uuidSegment).toString();
             }
-            String managedFor =
-                ManagedTokenValidator.verify(
-                    managedAccessToken.get(), clientId, requestedForUserID);
-            if (!JsonKey.USER_UNAUTH_STATES.contains(managedFor)) {
-              request.flash().put(JsonKey.MANAGED_FOR, managedFor);
-            } else {
-              clientId = JsonKey.UNAUTHORIZED;
-            }
+          } else {
+            ProjectLogger.log("Ignoring x-authenticated-for token...");
           }
         }
       } else if (authClientToken.isPresent() && authClientId.isPresent()) {
+        // Client token is present
         clientId =
             AuthenticationHelper.verifyClientAccessToken(authClientId.get(), authClientToken.get());
         if (!JsonKey.UNAUTHORIZED.equals(clientId)) {

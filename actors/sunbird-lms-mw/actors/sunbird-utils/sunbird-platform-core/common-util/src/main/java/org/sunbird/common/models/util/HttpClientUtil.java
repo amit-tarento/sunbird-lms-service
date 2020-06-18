@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.MapUtils;
 import org.apache.http.*;
-import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -35,7 +34,6 @@ public class HttpClientUtil {
             .setConnectTimeout(25000)
             .setConnectionRequestTimeout(25000)
             .setContentCompressionEnabled(true)
-            .setCookieSpec(CookieSpecs.IGNORE_COOKIES)
             .build();
     ConnectionKeepAliveStrategy myStrategy =
         (response, context) -> {
@@ -58,8 +56,8 @@ public class HttpClientUtil {
             .useSystemProperties()
             .setKeepAliveStrategy(myStrategy)
             .setDefaultRequestConfig(defaultRequestConfig)
-            .setMaxConnPerRoute(20)
-            .setMaxConnTotal(100)
+            .setMaxConnPerRoute(50)
+            .setMaxConnTotal(500)
             .build();
   }
 
