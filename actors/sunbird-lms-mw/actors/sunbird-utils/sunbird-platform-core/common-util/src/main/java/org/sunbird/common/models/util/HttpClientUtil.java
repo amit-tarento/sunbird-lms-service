@@ -56,7 +56,7 @@ public class HttpClientUtil {
             .useSystemProperties()
             .setKeepAliveStrategy(myStrategy)
             .setDefaultRequestConfig(defaultRequestConfig)
-            .setMaxConnPerRoute(50)
+            .setMaxConnPerRoute(100)
             .setMaxConnTotal(500)
             .build();
   }
