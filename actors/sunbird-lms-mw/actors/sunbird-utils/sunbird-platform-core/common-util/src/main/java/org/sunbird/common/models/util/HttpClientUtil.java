@@ -39,11 +39,11 @@ public class HttpClientUtil {
               return Long.parseLong(value) * 1000;
             }
           }
-          return 25 * 1000;
+          return 180 * 1000;
         };
     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     connectionManager.setMaxTotal(200);
-    connectionManager.setDefaultMaxPerRoute(20);
+    connectionManager.setDefaultMaxPerRoute(100);
     connectionManager.closeIdleConnections(180, TimeUnit.SECONDS);
     httpclient =
         HttpClients.custom()
