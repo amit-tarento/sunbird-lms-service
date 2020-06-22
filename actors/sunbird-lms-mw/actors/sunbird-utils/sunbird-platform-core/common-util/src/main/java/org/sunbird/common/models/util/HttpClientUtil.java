@@ -27,6 +27,10 @@ public class HttpClientUtil {
   private static HttpClientUtil httpClientUtil;
 
   private HttpClientUtil() {
+    getHttpclient();
+  }
+
+  private static CloseableHttpClient getHttpclient() {
     ConnectionKeepAliveStrategy keepAliveStrategy =
         (response, context) -> {
           HeaderElementIterator it =
@@ -52,6 +56,7 @@ public class HttpClientUtil {
             .useSystemProperties()
             .setKeepAliveStrategy(keepAliveStrategy)
             .build();
+    return httpclient;
   }
 
   public static HttpClientUtil getInstance() {
@@ -103,6 +108,7 @@ public class HttpClientUtil {
 
   public static String post(String requestURL, String params, Map<String, String> headers) {
     CloseableHttpResponse response = null;
+    CloseableHttpClient closeableHttpClient = getHttpclient();
     try {
       HttpPost httpPost = new HttpPost(requestURL);
       if (MapUtils.isNotEmpty(headers)) {
@@ -113,7 +119,7 @@ public class HttpClientUtil {
       StringEntity entity = new StringEntity(params);
       httpPost.setEntity(entity);
 
-      response = httpclient.execute(httpPost);
+      response = closeableHttpClient.execute(httpPost);
       int status = response.getStatusLine().getStatusCode();
       if (status >= 200 && status < 300) {
         HttpEntity httpEntity = response.getEntity();
@@ -133,6 +139,9 @@ public class HttpClientUtil {
       if (null != response) {
         try {
           response.close();
+          if (null != closeableHttpClient) {
+            closeableHttpClient.close();
+          }
         } catch (Exception ex) {
           ProjectLogger.log("Exception occurred while closing Post response object", ex);
         }
