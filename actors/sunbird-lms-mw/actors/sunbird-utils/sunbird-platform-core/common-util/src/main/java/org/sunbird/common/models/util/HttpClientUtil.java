@@ -27,10 +27,6 @@ public class HttpClientUtil {
   private static HttpClientUtil httpClientUtil;
 
   private HttpClientUtil() {
-    getHttpclient();
-  }
-
-  private static CloseableHttpClient getHttpclient() {
     ConnectionKeepAliveStrategy keepAliveStrategy =
         (response, context) -> {
           HeaderElementIterator it =
@@ -56,7 +52,6 @@ public class HttpClientUtil {
             .useSystemProperties()
             .setKeepAliveStrategy(keepAliveStrategy)
             .build();
-    return httpclient;
   }
 
   public static HttpClientUtil getInstance() {
@@ -107,8 +102,27 @@ public class HttpClientUtil {
   }
 
   public static String post(String requestURL, String params, Map<String, String> headers) {
+    // --------------------------------------------------
+    ConnectionKeepAliveStrategy keepAliveStrategy =
+        (response, context) -> {
+          HeaderElementIterator it =
+              new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+          while (it.hasNext()) {
+            HeaderElement he = it.nextElement();
+            String param = he.getName();
+            String value = he.getValue();
+            if (value != null && param.equalsIgnoreCase("timeout")) {
+              return Long.parseLong(value) * 1000;
+            }
+          }
+          return 180 * 1000;
+        };
+    CloseableHttpClient closeableHttpClient =
+        HttpClients.custom().useSystemProperties().setKeepAliveStrategy(keepAliveStrategy).build();
+
+    // -----------------------------------------------------
+
     CloseableHttpResponse response = null;
-    CloseableHttpClient closeableHttpClient = getHttpclient();
     try {
       HttpPost httpPost = new HttpPost(requestURL);
       if (MapUtils.isNotEmpty(headers)) {
