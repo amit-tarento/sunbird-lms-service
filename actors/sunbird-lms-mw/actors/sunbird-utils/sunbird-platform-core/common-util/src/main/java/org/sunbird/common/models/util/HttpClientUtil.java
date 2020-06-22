@@ -102,27 +102,8 @@ public class HttpClientUtil {
   }
 
   public static String post(String requestURL, String params, Map<String, String> headers) {
-    // --------------------------------------------------
-    ConnectionKeepAliveStrategy keepAliveStrategy =
-        (response, context) -> {
-          HeaderElementIterator it =
-              new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-          while (it.hasNext()) {
-            HeaderElement he = it.nextElement();
-            String param = he.getName();
-            String value = he.getValue();
-            if (value != null && param.equalsIgnoreCase("timeout")) {
-              return Long.parseLong(value) * 1000;
-            }
-          }
-          return 180 * 1000;
-        };
-    CloseableHttpClient closeableHttpClient =
-        HttpClients.custom().setKeepAliveStrategy(keepAliveStrategy).build();
-
-    // -----------------------------------------------------
-
     CloseableHttpResponse response = null;
+    CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
     try {
       HttpPost httpPost = new HttpPost(requestURL);
       if (MapUtils.isNotEmpty(headers)) {
@@ -150,12 +131,16 @@ public class HttpClientUtil {
       ProjectLogger.log("Exception occurred while calling Post method", ex);
       return "";
     } finally {
+      if (null != closeableHttpClient) {
+        try {
+          closeableHttpClient.close();
+        } catch (Exception ex) {
+          ProjectLogger.log("Exception occurred while closing Post response object", ex);
+        }
+      }
       if (null != response) {
         try {
           response.close();
-          if (null != closeableHttpClient) {
-            closeableHttpClient.close();
-          }
         } catch (Exception ex) {
           ProjectLogger.log("Exception occurred while closing Post response object", ex);
         }
