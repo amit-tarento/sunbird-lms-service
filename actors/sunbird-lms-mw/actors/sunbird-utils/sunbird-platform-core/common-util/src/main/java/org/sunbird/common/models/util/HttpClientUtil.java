@@ -118,7 +118,7 @@ public class HttpClientUtil {
           return 180 * 1000;
         };
     CloseableHttpClient closeableHttpClient =
-        HttpClients.custom().useSystemProperties().setKeepAliveStrategy(keepAliveStrategy).build();
+        HttpClients.custom().setKeepAliveStrategy(keepAliveStrategy).build();
 
     // -----------------------------------------------------
 
