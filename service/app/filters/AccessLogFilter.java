@@ -62,6 +62,7 @@ public class AccessLogFilter extends EssentialFilter {
                 } catch (Exception ex) {
                   ProjectLogger.log("AccessLogFilter:apply Exception in writing telemetry", ex);
                 }
+                request.flash().clear();
                 return result;
               },
               executor);

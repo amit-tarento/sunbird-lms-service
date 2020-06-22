@@ -11,11 +11,14 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeaderElementIterator;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 public class HttpClientUtil {
@@ -24,29 +27,30 @@ public class HttpClientUtil {
   private static HttpClientUtil httpClientUtil;
 
   private HttpClientUtil() {
-    /*ConnectionKeepAliveStrategy keepAliveStrategy =
-    (response, context) -> {
-      HeaderElementIterator it =
-          new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
-      while (it.hasNext()) {
-        HeaderElement he = it.nextElement();
-        String param = he.getName();
-        String value = he.getValue();
-        if (value != null && param.equalsIgnoreCase("timeout")) {
-          return Long.parseLong(value) * 1000;
-        }
-      }
-      return 180 * 1000;
-    };*/
+    ConnectionKeepAliveStrategy keepAliveStrategy =
+        (response, context) -> {
+          HeaderElementIterator it =
+              new BasicHeaderElementIterator(response.headerIterator(HTTP.CONN_KEEP_ALIVE));
+          while (it.hasNext()) {
+            HeaderElement he = it.nextElement();
+            String param = he.getName();
+            String value = he.getValue();
+            if (value != null && param.equalsIgnoreCase("timeout")) {
+              return Long.parseLong(value) * 1000;
+            }
+          }
+          return 180 * 1000;
+        };
+
     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     connectionManager.setMaxTotal(200);
-    connectionManager.setDefaultMaxPerRoute(100);
+    connectionManager.setDefaultMaxPerRoute(150);
     connectionManager.closeIdleConnections(180, TimeUnit.SECONDS);
     httpclient =
         HttpClients.custom()
             .setConnectionManager(connectionManager)
             .useSystemProperties()
-            // .setKeepAliveStrategy(keepAliveStrategy)
+            .setKeepAliveStrategy(keepAliveStrategy)
             .build();
   }
 
