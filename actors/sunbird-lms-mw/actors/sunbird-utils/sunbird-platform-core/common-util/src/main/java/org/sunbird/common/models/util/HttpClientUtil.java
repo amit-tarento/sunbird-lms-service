@@ -103,7 +103,6 @@ public class HttpClientUtil {
 
   public static String post(String requestURL, String params, Map<String, String> headers) {
     CloseableHttpResponse response = null;
-    CloseableHttpClient closeableHttpClient = HttpClients.createDefault();
     try {
       HttpPost httpPost = new HttpPost(requestURL);
       if (MapUtils.isNotEmpty(headers)) {
@@ -114,7 +113,7 @@ public class HttpClientUtil {
       StringEntity entity = new StringEntity(params);
       httpPost.setEntity(entity);
 
-      response = closeableHttpClient.execute(httpPost);
+      response = httpclient.execute(httpPost);
       int status = response.getStatusLine().getStatusCode();
       if (status >= 200 && status < 300) {
         HttpEntity httpEntity = response.getEntity();
@@ -131,13 +130,6 @@ public class HttpClientUtil {
       ProjectLogger.log("Exception occurred while calling Post method", ex);
       return "";
     } finally {
-      if (null != closeableHttpClient) {
-        try {
-          closeableHttpClient.close();
-        } catch (Exception ex) {
-          ProjectLogger.log("Exception occurred while closing Post response object", ex);
-        }
-      }
       if (null != response) {
         try {
           response.close();
