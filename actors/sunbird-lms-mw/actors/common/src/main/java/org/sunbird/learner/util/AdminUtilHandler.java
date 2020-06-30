@@ -39,7 +39,7 @@ public class AdminUtilHandler {
    * @return encryptedTokenList
    */
   public static Map<String, Object> fetchEncryptedToken(AdminUtilRequestPayload reqObject) {
-    Map<String, Object> data = new HashMap<>();
+    Map<String, Object> data = null;
     ObjectMapper mapper = new ObjectMapper();
     try {
 
@@ -63,35 +63,14 @@ public class AdminUtilHandler {
           body,
           headers);
 
-      future.thenApplyAsync((result)->{
-        if (null != result && !result.isEmpty()) {
-          Map<String, Object> dataf = null;
-          try {
-            ProjectLogger.log(
-              "AdminUtilHandler :: fetchEncryptedToken: response payload" + result,
-              LoggerEnum.INFO.name());
-            dataf = mapper.readValue(result, Map.class);
-            if (MapUtils.isNotEmpty(dataf)) {
-              data.clear();
-              data.putAll((Map<String, Object>) dataf.get(JsonKey.RESULT));
-              return data;
-            } else {
-              throw new ProjectCommonException(
-                ResponseCode.unableToParseData.getErrorCode(),
-                ResponseCode.unableToParseData.getErrorMessage(),
-                ResponseCode.SERVER_ERROR.getResponseCode());
-            }
-          } catch (Exception e) {
-            ProjectLogger.log(
-              "AdminUtilHandler:fetchEncryptedToken Exception occurred while fetching data from future: " + e.getMessage(), e);
-            throw new ProjectCommonException(
-              ResponseCode.unableToParseData.getErrorCode(),
-              ResponseCode.unableToParseData.getErrorMessage(),
-              ResponseCode.SERVER_ERROR.getResponseCode());
-          }
-        }
-        return Collections.emptyMap();
-      });
+      String result = future.get();
+      ProjectLogger.log(
+        "AdminUtilHandler :: fetchEncryptedToken: response payload" + result,
+        LoggerEnum.INFO.name());
+      Map<String, Object> resultMap = mapper.readValue(result, Map.class);
+      if (MapUtils.isNotEmpty(resultMap)) {
+        data = (Map<String, Object>) resultMap.get(JsonKey.RESULT);
+      }
     } catch (IOException e) {
       ProjectLogger.log(
           "AdminUtilHandler:fetchEncryptedToken Exception occurred : " + e.getMessage(), e);
