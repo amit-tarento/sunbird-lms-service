@@ -53,6 +53,11 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.0</version>
 		</dependency>
+        <dependency>
+          <groupId>com.mashape.unirest</groupId>
+          <artifactId>unirest-java</artifactId>
+          <version>1.4.9</version>
+        </dependency>
 		<!-- Adding for Key cloak SSO server. -->
 		<dependency>
 			<groupId>org.keycloak</groupId>

@@ -2,10 +2,9 @@ package org.sunbird.learner.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+
 import org.apache.commons.collections4.MapUtils;
 import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.util.*;
@@ -40,7 +39,7 @@ public class AdminUtilHandler {
    * @return encryptedTokenList
    */
   public static Map<String, Object> fetchEncryptedToken(AdminUtilRequestPayload reqObject) {
-    Map<String, Object> data = null;
+    Map<String, Object> data = new HashMap<>();
     ObjectMapper mapper = new ObjectMapper();
     try {
 
@@ -51,19 +50,46 @@ public class AdminUtilHandler {
       Map<String, String> headers = new HashMap<>();
       headers.put("Content-Type", "application/json");
 
-      String response =
+      /*String response =
           HttpClientUtil.post(
               ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_BASE_URL)
                   + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT),
               body,
-              headers);
-      ProjectLogger.log(
-          "AdminUtilHandler :: fetchEncryptedToken: response payload" + response,
-          LoggerEnum.INFO.name());
-      data = mapper.readValue(response, Map.class);
-      if (MapUtils.isNotEmpty(data)) {
-        data = (Map<String, Object>) data.get(JsonKey.RESULT);
-      }
+              headers);*/
+      CompletableFuture<String> future =
+        UniRestClient.postAsync(
+          ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_BASE_URL)
+            + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT),
+          body,
+          headers);
+
+      future.thenApplyAsync((result)->{
+        if (null != result && !result.isEmpty()) {
+          Map<String, Object> dataf = null;
+          try {
+            ProjectLogger.log(
+              "AdminUtilHandler :: fetchEncryptedToken: response payload" + result,
+              LoggerEnum.INFO.name());
+            dataf = mapper.readValue(result, Map.class);
+            if (MapUtils.isNotEmpty(dataf)) {
+              return (Map<String, Object>) dataf.get(JsonKey.RESULT);
+            } else {
+              throw new ProjectCommonException(
+                ResponseCode.unableToParseData.getErrorCode(),
+                ResponseCode.unableToParseData.getErrorMessage(),
+                ResponseCode.SERVER_ERROR.getResponseCode());
+            }
+          } catch (Exception e) {
+            ProjectLogger.log(
+              "AdminUtilHandler:fetchEncryptedToken Exception occurred while fetching data from future: " + e.getMessage(), e);
+            throw new ProjectCommonException(
+              ResponseCode.unableToParseData.getErrorCode(),
+              ResponseCode.unableToParseData.getErrorMessage(),
+              ResponseCode.SERVER_ERROR.getResponseCode());
+          }
+        }
+        return Collections.emptyMap();
+      });
     } catch (IOException e) {
       ProjectLogger.log(
           "AdminUtilHandler:fetchEncryptedToken Exception occurred : " + e.getMessage(), e);

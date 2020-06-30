@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -21,6 +22,7 @@ import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.models.adminutil.AdminUtilRequestData;
 import org.sunbird.models.adminutil.AdminUtilRequestPayload;
 
+@Ignore
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HttpClientUtil.class, AdminUtilHandlerTest.class})
 @PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
