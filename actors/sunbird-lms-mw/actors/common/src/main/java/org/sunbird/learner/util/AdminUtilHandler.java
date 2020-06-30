@@ -72,7 +72,9 @@ public class AdminUtilHandler {
               LoggerEnum.INFO.name());
             dataf = mapper.readValue(result, Map.class);
             if (MapUtils.isNotEmpty(dataf)) {
-              return (Map<String, Object>) dataf.get(JsonKey.RESULT);
+              data.clear();
+              data.putAll((Map<String, Object>) dataf.get(JsonKey.RESULT));
+              return data;
             } else {
               throw new ProjectCommonException(
                 ResponseCode.unableToParseData.getErrorCode(),
