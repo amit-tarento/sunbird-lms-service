@@ -107,7 +107,9 @@ public class AdminUtilHandler {
           ResponseCode.unableToParseData.getErrorMessage(),
           ResponseCode.SERVER_ERROR.getResponseCode());
     }
-
+    ProjectLogger.log(
+      "AdminUtilHandler :: fetchEncryptedToken: sending response data " + data,
+      LoggerEnum.INFO.name());
     return data;
   }
 }
