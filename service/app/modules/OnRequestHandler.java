@@ -49,7 +49,7 @@ public class OnRequestHandler implements ActionCreator {
         request.getHeaders();
         CompletionStage<Result> result = checkForServiceHealth(request);
         if (result != null) return result;
-        //From 3.0.0 checking user access-token and managed-by from the request header
+        // From 3.0.0 checking user access-token and managed-by from the request header
         String message = RequestInterceptor.verifyRequestData(request);
         // call method to set all the required params for the telemetry event(log)...
         initializeRequestInfo(request, message, requestId);
@@ -62,7 +62,7 @@ public class OnRequestHandler implements ActionCreator {
               break;
             }
           }
-            result = delegate.call(request);
+          result = delegate.call(request);
         } else if (JsonKey.UNAUTHORIZED.equals(message)) {
           result =
               onDataValidationError(request, message, ResponseCode.UNAUTHORIZED.getResponseCode());
@@ -137,8 +137,21 @@ public class OnRequestHandler implements ActionCreator {
                 : JsonKey.DEFAULT_ROOT_ORG_ID;
       }
       reqContext.put(JsonKey.CHANNEL, channel);
+      Optional<String> optionalRequestId = request.header(HeaderParam.X_Request_ID.getName());
+      Optional<String> optionalLoggerType = request.header(HeaderParam.X_Log_Level.getName());
+      if (optionalRequestId.isPresent()) {
+        reqContext.put(JsonKey.REQUEST_ID, optionalRequestId.get());
+        request.flash().put(JsonKey.REQUEST_ID, optionalRequestId.get());
+      } else {
+        request.flash().put(JsonKey.REQUEST_ID, requestId);
+        reqContext.put(JsonKey.REQUEST_ID, requestId);
+      }
+      if (optionalLoggerType.isPresent()) {
+        request.flash().put(JsonKey.LOG_LEVEL, optionalLoggerType.get());
+        reqContext.put(JsonKey.LOG_LEVEL, optionalLoggerType.get());
+      }
       reqContext.put(JsonKey.ENV, getEnv(request));
-      reqContext.put(JsonKey.REQUEST_ID, requestId);
+
       reqContext.putAll(DataCacheHandler.getTelemetryPdata());
       Optional<String> optionalAppId = request.header(HeaderParam.X_APP_ID.getName());
       if (optionalAppId.isPresent()) {
@@ -168,7 +181,6 @@ public class OnRequestHandler implements ActionCreator {
       additionalInfo.put(JsonKey.URL, url);
       additionalInfo.put(JsonKey.METHOD, methodName);
       map.put(JsonKey.ADDITIONAL_INFO, additionalInfo);
-      request.flash().put(JsonKey.REQUEST_ID, requestId);
       request.flash().put(JsonKey.CONTEXT, mapper.writeValueAsString(map));
     } catch (Exception ex) {
       ProjectCommonException.throwServerErrorException(ResponseCode.SERVER_ERROR);

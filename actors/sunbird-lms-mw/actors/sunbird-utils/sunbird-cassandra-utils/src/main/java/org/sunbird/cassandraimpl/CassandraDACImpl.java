@@ -15,17 +15,24 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.sunbird.common.CassandraUtil;
 import org.sunbird.common.Constants;
+import org.sunbird.common.RequestContext;
 import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.responsecode.ResponseCode;
+import org.sunbird.helper.CassandraConnectionManager;
 
 public class CassandraDACImpl extends CassandraOperationImpl {
 
+  public CassandraDACImpl(
+      RequestContext requestContext, CassandraConnectionManager connectionManager) {
+    super(requestContext, connectionManager);
+  }
+
   public Response getRecords(
       String keySpace, String table, Map<String, Object> filters, List<String> fields) {
-    Response response = new Response();
+    Response response;
     Session session = connectionManager.getSession(keySpace);
     try {
       Select select;

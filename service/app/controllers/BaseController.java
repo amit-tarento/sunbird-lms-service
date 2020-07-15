@@ -759,6 +759,8 @@ public class BaseController extends Controller {
       Map<String, Object> requestInfo =
           objectMapper.readValue(reqContext, new TypeReference<Map<String, Object>>() {});
       reqObj.setRequestId(httpReq.flash().get(JsonKey.REQUEST_ID));
+      reqObj.setLogType(httpReq.flash().get(JsonKey.LOG_LEVEL));
+      reqObj.setUri(httpReq.uri());
       reqObj.getContext().putAll((Map<String, Object>) requestInfo.get(JsonKey.CONTEXT));
       reqObj.getContext().putAll((Map<String, Object>) requestInfo.get(JsonKey.ADDITIONAL_INFO));
     } catch (Exception ex) {
