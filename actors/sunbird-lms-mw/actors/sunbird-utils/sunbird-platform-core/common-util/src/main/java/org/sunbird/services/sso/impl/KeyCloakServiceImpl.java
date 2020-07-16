@@ -597,6 +597,27 @@ public class KeyCloakServiceImpl implements SSOManager {
         if (StringUtils.isNotBlank(tokenSubject)) {
           int pos = tokenSubject.lastIndexOf(":");
           return tokenSubject.substring(pos + 1);
+        } else {
+          try {
+            String ssoUrl2 = ("https://loadtestvdn.ntp.net.in/auth");
+            AccessToken token2 =
+                RSATokenVerifier.verifyToken(
+                    accessToken,
+                    publicKey,
+                    ssoUrl2 + "realms/" + KeyCloakConnectionProvider.SSO_REALM,
+                    true,
+                    true);
+            String tokenSubject2 = token2.getSubject();
+            if (StringUtils.isNotBlank(tokenSubject2)) {
+              int pos = tokenSubject2.lastIndexOf(":");
+              return tokenSubject2.substring(pos + 1);
+            }
+          } catch (Exception ex) {
+            throw new ProjectCommonException(
+                ResponseCode.unAuthorized.getErrorCode(),
+                ResponseCode.unAuthorized.getErrorMessage(),
+                ResponseCode.UNAUTHORIZED.getResponseCode());
+          }
         }
         return token.getSubject();
       } else {
