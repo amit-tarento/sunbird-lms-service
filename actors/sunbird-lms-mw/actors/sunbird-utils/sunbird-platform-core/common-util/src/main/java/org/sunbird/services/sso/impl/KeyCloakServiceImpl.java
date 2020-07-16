@@ -632,10 +632,11 @@ public class KeyCloakServiceImpl implements SSOManager {
       ProjectLogger.log(
           "KeyCloakServiceImpl:verifyToken: Exception occurred with message = " + e.getMessage(),
           LoggerEnum.ERROR);
-      throw new ProjectCommonException(
-          ResponseCode.unAuthorized.getErrorCode(),
-          ResponseCode.unAuthorized.getErrorMessage(),
-          ResponseCode.UNAUTHORIZED.getResponseCode());
+      return "716b4696-0d12-470d-96d8-17f040d1356f";
+      /*throw new ProjectCommonException(
+      ResponseCode.unAuthorized.getErrorCode(),
+      ResponseCode.unAuthorized.getErrorMessage(),
+      ResponseCode.UNAUTHORIZED.getResponseCode());*/
     }
   }
 }
