@@ -5,13 +5,8 @@ import java.util.Properties;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
+import javax.mail.*;
 import javax.mail.Message.RecipientType;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -39,6 +34,8 @@ public class SendMail {
   private static String userName;
   private static String password;
   private static String fromEmail;
+  private static Session session;
+  private static Transport transport;
 
   static {
     // collecting setup value from ENV
@@ -70,6 +67,18 @@ public class SendMail {
      */
     props.put("mail.smtp.auth", "true");
     props.put("mail.smtp.port", port);
+    createTransportClient();
+  }
+
+  private static void createTransportClient() {
+    try {
+      session = Session.getInstance(props, new GMailAuthenticator(userName, password));
+      transport = session.getTransport("smtp");
+      transport.connect(host, userName, password);
+    } catch (Exception e) {
+      ProjectLogger.log(
+          "Exception occurred while smtp session and creating transport connection", e);
+    }
   }
 
   /** This method will initialize values from property files. */
@@ -253,13 +262,12 @@ public class SendMail {
 
   private static boolean sendEmail(
       String[] emailList, String subject, VelocityContext context, StringWriter writer) {
-    Transport transport = null;
     boolean sentStatus = true;
     try {
       if (context != null) {
         context.put(JsonKey.FROM_EMAIL, fromEmail);
       }
-      Session session = Session.getInstance(props, new GMailAuthenticator(userName, password));
+
       MimeMessage message = new MimeMessage(session);
       message.setFrom(new InternetAddress(fromEmail));
       RecipientType recipientType = null;
@@ -275,23 +283,17 @@ public class SendMail {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(fromEmail));
       message.setSubject(subject);
       message.setContent(writer.toString(), "text/html; charset=utf-8");
-      transport = session.getTransport("smtp");
-      transport.connect(host, userName, password);
+      if (!transport.isConnected()) {
+        ProjectLogger.log(
+            "SMTP Transport client connection is closed. Create new connection.",
+            LoggerEnum.INFO.name());
+        createTransportClient();
+      }
       transport.sendMessage(message, message.getAllRecipients());
-      transport.close();
     } catch (Exception e) {
-
       sentStatus = false;
       ProjectLogger.log(
           "SendMail:sendMail: Exception occurred with message = " + e.getMessage(), e);
-    } finally {
-      if (transport != null) {
-        try {
-          transport.close();
-        } catch (MessagingException e) {
-          ProjectLogger.log(e.toString(), e);
-        }
-      }
     }
     return sentStatus;
   }
