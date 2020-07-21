@@ -136,7 +136,7 @@ public class EmailServiceActor extends BaseActor {
             "EmailServiceActor:sendMail: Sending email to = " + emails.size() + " emails",
             LoggerEnum.INFO.name());
       }
-
+      long startTime = System.currentTimeMillis();
       try {
         SendMail.sendMailWithBody(
             emails.toArray(new String[emails.size()]),
@@ -145,7 +145,15 @@ public class EmailServiceActor extends BaseActor {
             template);
       } catch (Exception e) {
         ProjectLogger.log(
-            "EmailServiceActor:sendMail: Exception occurred with message = " + e.getMessage(), e);
+            "EmailServiceActor:sendMail: Exception occurred while sending email with message = "
+                + e.getMessage(),
+            e);
+      } finally {
+        long endTime = System.currentTimeMillis();
+        long totalTimeTaken = endTime - startTime;
+        ProjectLogger.log(
+            "EmailServiceActor:sendMail: Total time taken to send Email :: " + totalTimeTaken,
+            LoggerEnum.INFO.name());
       }
     }
 
