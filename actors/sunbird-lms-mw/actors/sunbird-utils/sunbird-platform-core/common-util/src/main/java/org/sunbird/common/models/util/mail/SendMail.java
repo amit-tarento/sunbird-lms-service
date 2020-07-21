@@ -28,6 +28,8 @@ import org.sunbird.common.models.util.PropertiesCache;
  */
 public class SendMail {
 
+  private static int count;
+
   private static Properties props = null;
   private static String host;
   private static String port;
@@ -283,12 +285,23 @@ public class SendMail {
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(fromEmail));
       message.setSubject(subject);
       message.setContent(writer.toString(), "text/html; charset=utf-8");
-      if (!transport.isConnected()) {
+      if ((!transport.isConnected()) || count >= 500) {
         ProjectLogger.log(
             "SMTP Transport client connection is closed. Create new connection.",
             LoggerEnum.INFO.name());
+        if (count >= 500) {
+          try {
+            transport.close();
+          } catch (Exception ex) {
+            ProjectLogger.log("Re initializing the SMTP connection.");
+          }
+        }
         createTransportClient();
       }
+      ProjectLogger.log(
+          "Total Number of request processed so for with client " + transport + " is : " + count,
+          LoggerEnum.INFO.name());
+      count++;
       transport.sendMessage(message, message.getAllRecipients());
     } catch (Exception e) {
       sentStatus = false;
