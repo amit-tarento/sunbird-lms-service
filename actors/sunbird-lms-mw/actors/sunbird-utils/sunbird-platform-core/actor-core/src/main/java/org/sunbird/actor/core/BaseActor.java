@@ -18,6 +18,7 @@ import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
+import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.request.Request;
 import org.sunbird.common.responsecode.ResponseCode;
 import scala.concurrent.duration.Duration;
@@ -41,8 +42,11 @@ public abstract class BaseActor extends UntypedAbstractActor {
       try {
         Map<String, Object> mdc = new HashMap<>();
         mdc.put(JsonKey.REQUEST_ID, request.getTraceId());
+        mdc.put("custom-trace-id", ProjectUtil.generateUniqueId());
         mdc.put(JsonKey.OPERATION, request.getOperation());
+        mdc.put(JsonKey.EMAIL, request.getRequest().get(JsonKey.EMAIL));
         logger.setMDC(mdc);
+        logger.info("onReceive method invoked.");
         onReceive(request);
       } catch (Exception e) {
         ProjectLogger.log(
