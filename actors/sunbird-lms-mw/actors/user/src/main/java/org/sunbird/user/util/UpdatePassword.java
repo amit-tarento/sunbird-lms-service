@@ -21,8 +21,9 @@ public class UpdatePassword {
   }
 
   public boolean updatePassword(Map<String, Object> userMap) {
-    logger.info("from logger2 Update user password for userid : " + userMap.get(JsonKey.ID));
-    System.out.println("update password context in mdc : " + MDC.getCopyOfContextMap());
+    logger.info("Update user password for userid : " + userMap.get(JsonKey.ID));
+    logger.info("UpdatePassword : got requestId  : " + MDC.getCopyOfContextMap().get("requestId"));
+
     if (StringUtils.isNotBlank((String) userMap.get(JsonKey.PASSWORD))) {
       return ssoManager.updatePassword(
           (String) userMap.get(JsonKey.ID), (String) userMap.get(JsonKey.PASSWORD));
