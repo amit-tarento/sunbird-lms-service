@@ -50,12 +50,12 @@ public abstract class BaseRouter extends BaseActor {
         switch (name) {
           case "BackgroundRequestRouter":
             String[] bgOperations = routerDetails.asyncTasks();
-            dispatcher = (StringUtils.isNotBlank(dispatcher)) ? dispatcher : "brr-usr-dispatcher";
+            dispatcher = (StringUtils.isNotBlank(dispatcher)) ? dispatcher : "brr-dispatcher";
             createActor(context, actor, bgOperations, dispatcher);
             break;
           case "RequestRouter":
             String[] operations = routerDetails.tasks();
-            dispatcher = (StringUtils.isNotBlank(dispatcher)) ? dispatcher : "rr-usr-dispatcher";
+            dispatcher = (StringUtils.isNotBlank(dispatcher)) ? dispatcher : "rr-dispatcher";
             createActor(context, actor, operations, dispatcher);
             break;
           default:

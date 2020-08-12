@@ -3,6 +3,8 @@ package org.sunbird.user.actors;
 import akka.actor.ActorRef;
 import akka.dispatch.Futures;
 import akka.dispatch.Mapper;
+import akka.event.DiagnosticLoggingAdapter;
+import akka.event.Logging;
 import akka.pattern.Patterns;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -87,9 +89,19 @@ public class UserManagementActor extends BaseActor {
   private ActorRef systemSettingActorRef = null;
   private static ElasticSearchService esUtil = EsClientFactory.getInstance(JsonKey.REST);
   private UserClient userClient = new UserClientImpl();
+  final DiagnosticLoggingAdapter logger = Logging.getLogger(this);
 
   @Override
   public void onReceive(Request request) throws Throwable {
+    // ---------------------------------
+    Map<String, Object> mdc = new HashMap<>();
+    mdc.put(JsonKey.REQUEST_ID, request.getTraceId());
+    mdc.put("custom-trace-id", ProjectUtil.generateUniqueId());
+    mdc.put(JsonKey.OPERATION, request.getOperation());
+    mdc.put(JsonKey.EMAIL, request.getRequest().get(JsonKey.EMAIL));
+    logger.setMDC(mdc);
+    logger.info("UserManagementActor onReceive method invoked.");
+    // ------------------------------------------------
     Util.initializeContext(request, TelemetryEnvKey.USER);
     cacheFrameworkFieldsConfig();
     if (systemSettingActorRef == null) {
@@ -118,6 +130,8 @@ public class UserManagementActor extends BaseActor {
       default:
         onReceiveUnsupportedOperation("UserManagementActor");
     }
+
+    logger.clearMDC();
   }
 
   /**
