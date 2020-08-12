@@ -13,7 +13,9 @@ public class UpdatePassword {
   private Logger logger = LoggerFactory.getLogger(UpdatePassword.class);
   private SSOManager ssoManager = SSOServiceFactory.getInstance();
 
-  public UpdatePassword(Map<String, String> contextMap) {
+  public UpdatePassword() {}
+
+  private UpdatePassword(Map<String, String> contextMap) {
     MDC.setContextMap(contextMap);
     System.out.println("Context from user actor: " + contextMap);
   }

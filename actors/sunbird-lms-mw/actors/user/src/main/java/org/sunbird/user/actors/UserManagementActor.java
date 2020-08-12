@@ -15,6 +15,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.MDC;
 import org.sunbird.actor.core.BaseActor;
 import org.sunbird.actor.router.ActorConfig;
 import org.sunbird.actorutil.InterServiceCommunication;
@@ -918,6 +919,7 @@ public class UserManagementActor extends BaseActor {
                 @Override
                 public Boolean call() {
                   logger.info("user signup log update user password");
+                  MDC.setContextMap(reqContext);
                   try {
                     Map<String, Object> updatePasswordMap = new HashMap<String, Object>();
                     updatePasswordMap.put(JsonKey.ID, (String) userMap.get(JsonKey.ID));
@@ -928,7 +930,7 @@ public class UserManagementActor extends BaseActor {
                             + " --"
                             + (String) userMap.get(JsonKey.ID),
                         LoggerEnum.INFO.name());
-                    UpdatePassword updatePassword = new UpdatePassword(reqContext);
+                    UpdatePassword updatePassword = new UpdatePassword();
                     return updatePassword.updatePassword(updatePasswordMap);
                   } catch (Exception e) {
                     ProjectLogger.log(

@@ -18,7 +18,6 @@ import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
-import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.request.Request;
 import org.sunbird.common.responsecode.ResponseCode;
 import scala.concurrent.duration.Duration;
@@ -41,7 +40,7 @@ public abstract class BaseActor extends UntypedAbstractActor {
           "BaseActor: onReceive called for operation: " + operation, LoggerEnum.INFO.name());
       try {
         Map<String, Object> mdc = new HashMap<>();
-        mdc.put(JsonKey.REQUEST_ID, ProjectUtil.generateUniqueId());
+        mdc.put(JsonKey.REQUEST_ID, request.getTraceId());
         mdc.put(JsonKey.OPERATION, request.getOperation());
         logger.setMDC(mdc);
         onReceive(request);

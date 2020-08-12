@@ -757,6 +757,9 @@ public class BaseController extends Controller {
 
   public void setContextData(Http.Request httpReq, org.sunbird.common.request.Request reqObj) {
     try {
+      if (httpReq.getHeaders().get("x-trace-id").isPresent()) {
+        reqObj.setTraceId(httpReq.getHeaders().get("x-trace-id").get());
+      }
       String reqContext = httpReq.flash().get(JsonKey.CONTEXT);
       Map<String, Object> requestInfo =
           objectMapper.readValue(reqContext, new TypeReference<Map<String, Object>>() {});

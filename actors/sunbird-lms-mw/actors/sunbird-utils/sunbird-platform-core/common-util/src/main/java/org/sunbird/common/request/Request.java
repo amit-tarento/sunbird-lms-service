@@ -27,7 +27,7 @@ public class Request implements Serializable {
   private String ver;
   private String ts;
   private RequestParams params;
-
+  private String traceId;
   private Map<String, Object> request = new WeakHashMap<>();
 
   private String managerName;
@@ -165,5 +165,13 @@ public class Request implements Serializable {
           MessageFormat.format(ResponseCode.invalidRequestTimeout.getErrorMessage(), timeout));
     }
     this.timeout = timeout;
+  }
+
+  public String getTraceId() {
+    return traceId;
+  }
+
+  public void setTraceId(String traceId) {
+    this.traceId = traceId;
   }
 }
