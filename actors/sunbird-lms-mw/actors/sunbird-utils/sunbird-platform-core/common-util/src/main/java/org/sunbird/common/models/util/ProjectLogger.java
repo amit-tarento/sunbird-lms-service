@@ -30,16 +30,16 @@ public class ProjectLogger {
 
   /** To log only message. */
   public static void log(String message) {
-    log(message, null, LoggerEnum.DEBUG.name());
+    // log(message, null, LoggerEnum.DEBUG.name());
   }
 
   public static void log(String message, Throwable e) {
-    log(message, null, e);
+    // log(message, null, e);
   }
 
   public static void log(String message, Throwable e, Map<String, Object> telemetryInfo) {
-    log(message, null, e);
-    telemetryProcess(telemetryInfo, e);
+    // log(message, null, e);
+    // telemetryProcess(telemetryInfo, e);
   }
 
   private static void telemetryProcess(Map<String, Object> telemetryInfo, Throwable e) {
@@ -74,47 +74,47 @@ public class ProjectLogger {
   }
 
   public static void log(String message, String logLevel) {
-    log(message, null, logLevel);
+    // log(message, null, logLevel);
   }
 
   /** To log message, data in used defined log level. */
   public static void log(String message, LoggerEnum logEnum) {
-    info(message, null, logEnum);
+    // info(message, null, logEnum);
   }
 
   /** To log message, data in used defined log level. */
   public static void log(String message, Object data, String logLevel) {
-    backendLog(message, data, null, logLevel);
+    // backendLog(message, data, null, logLevel);
   }
 
   /** To log exception with message and data. */
   public static void log(String message, Object data, Throwable e) {
-    backendLog(message, data, e, LoggerEnum.ERROR.name());
+    // backendLog(message, data, e, LoggerEnum.ERROR.name());
   }
 
   /** To log exception with message and data for user specific log level. */
   public static void log(String message, Object data, Throwable e, String logLevel) {
-    backendLog(message, data, e, logLevel);
+    // backendLog(message, data, e, logLevel);
   }
 
   private static void info(String message, Object data) {
-    rootLogger.info(getBELogEvent(LoggerEnum.INFO.name(), message, data));
+    // rootLogger.info(getBELogEvent(LoggerEnum.INFO.name(), message, data));
   }
 
   private static void info(String message, Object data, LoggerEnum loggerEnum) {
-    rootLogger.info(getBELogEvent(LoggerEnum.INFO.name(), message, data, loggerEnum));
+    // rootLogger.info(getBELogEvent(LoggerEnum.INFO.name(), message, data, loggerEnum));
   }
 
   private static void debug(String message, Object data) {
-    rootLogger.debug(getBELogEvent(LoggerEnum.DEBUG.name(), message, data));
+    // rootLogger.debug(getBELogEvent(LoggerEnum.DEBUG.name(), message, data));
   }
 
   private static void error(String message, Object data, Throwable exception) {
-    rootLogger.error(getBELogEvent(LoggerEnum.ERROR.name(), message, data, exception));
+    // rootLogger.error(getBELogEvent(LoggerEnum.ERROR.name(), message, data, exception));
   }
 
   private static void warn(String message, Object data, Throwable exception) {
-    rootLogger.warn(getBELogEvent(LoggerEnum.WARN.name(), message, data, exception));
+    // rootLogger.warn(getBELogEvent(LoggerEnum.WARN.name(), message, data, exception));
   }
 
   private static void backendLog(String message, Object data, Throwable e, String logLevel) {

@@ -54,6 +54,7 @@ import org.sunbird.user.dao.UserOrgDao;
 import org.sunbird.user.dao.impl.UserOrgDaoImpl;
 import org.sunbird.user.service.UserService;
 import org.sunbird.user.service.impl.UserServiceImpl;
+import org.sunbird.user.util.UpdatePassword;
 import org.sunbird.user.util.UserActorOperations;
 import org.sunbird.user.util.UserUtil;
 import scala.Tuple2;
@@ -900,12 +901,23 @@ public class UserManagementActor extends BaseActor {
       saveUserToKafka(esResponse);
       sender().tell(response, self());
     } else {
+      logger.info("user signup log");
+      Map<String, Object> contextMap = logger.getMDC();
+      Map<String, String> reqContext = new HashMap<>();
+      contextMap
+          .entrySet()
+          .forEach(
+              entry -> {
+                reqContext.put(entry.getKey(), entry.getValue().toString());
+              });
+      logger.info("Request context data in mdc : " + reqContext);
       Future<Boolean> kcFuture =
           Futures.future(
               new Callable<Boolean>() {
 
                 @Override
                 public Boolean call() {
+                  logger.info("user signup log update user password");
                   try {
                     Map<String, Object> updatePasswordMap = new HashMap<String, Object>();
                     updatePasswordMap.put(JsonKey.ID, (String) userMap.get(JsonKey.ID));
@@ -916,7 +928,8 @@ public class UserManagementActor extends BaseActor {
                             + " --"
                             + (String) userMap.get(JsonKey.ID),
                         LoggerEnum.INFO.name());
-                    return UserUtil.updatePassword(updatePasswordMap);
+                    UpdatePassword updatePassword = new UpdatePassword(reqContext);
+                    return updatePassword.updatePassword(updatePasswordMap);
                   } catch (Exception e) {
                     ProjectLogger.log(
                         "Error occured during update pasword : " + e.getMessage(),
@@ -934,6 +947,7 @@ public class UserManagementActor extends BaseActor {
 
                     @Override
                     public Response apply(Tuple2<String, Boolean> parameter) {
+                      logger.info("updating user password.");
                       boolean updatePassResponse = parameter._2;
                       ProjectLogger.log(
                           "UserManagementActor:processUserRequest: Response from update password call "
