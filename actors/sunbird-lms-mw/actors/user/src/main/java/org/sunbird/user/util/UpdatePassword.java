@@ -25,8 +25,8 @@ public class UpdatePassword {
     logger.info("UpdatePassword : got requestId  : " + MDC.getCopyOfContextMap().get("requestId"));
 
     if (StringUtils.isNotBlank((String) userMap.get(JsonKey.PASSWORD))) {
-      return ssoManager.updatePassword(
-          (String) userMap.get(JsonKey.ID), (String) userMap.get(JsonKey.PASSWORD));
+      // return ssoManager.updatePassword(
+      //    (String) userMap.get(JsonKey.ID), (String) userMap.get(JsonKey.PASSWORD));
     }
     return true;
   }
