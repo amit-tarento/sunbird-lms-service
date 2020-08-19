@@ -18,18 +18,28 @@ import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.response.ResponseParams;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
+import org.sunbird.common.request.LoggerUtil;
 import org.sunbird.telemetry.util.TelemetryWriter;
 import play.Application;
 import play.Mode;
 import play.inject.guice.GuiceApplicationBuilder;
+import play.libs.typedmap.TypedKey;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.test.Helpers;
+import util.Attrs;
 import util.RequestInterceptor;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
-@PrepareForTest({RequestInterceptor.class, TelemetryWriter.class, AccessLogFilter.class})
+@PrepareForTest({
+  RequestInterceptor.class,
+  TelemetryWriter.class,
+  AccessLogFilter.class,
+  Attrs.class,
+  TypedKey.class,
+  LoggerUtil.class
+})
 public abstract class BaseApplicationTest {
   protected Application application;
   private ActorSystem system;
@@ -49,6 +59,7 @@ public abstract class BaseApplicationTest {
       ActorRef subject = system.actorOf(props);
       BaseController.setActorRef(subject);
       AccessLogFilter filter = PowerMockito.mock(AccessLogFilter.class);
+      PowerMockito.mock(LoggerUtil.class);
       PowerMockito.mockStatic(RequestInterceptor.class);
       PowerMockito.mockStatic(TelemetryWriter.class);
       PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.any())).thenReturn("userId");

@@ -5,14 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+//import net.logstash.logback.argument.StructuredArguments;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.request.Request;
+import org.sunbird.common.request.RequestContext;
 import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.telemetry.util.TelemetryEvents;
+import org.sunbird.telemetry.util.TelemetryWriter;
 
 /**
  * This class will used to log the project message in any level.
@@ -25,8 +29,8 @@ public class ProjectLogger {
   private static String pVersion = "1.0";
   private static String dataId = "Sunbird";
   private static ObjectMapper mapper = new ObjectMapper();
-  private static Logger rootLogger = (Logger) LogManager.getLogger("defaultLogger");
-  //	private static TelemetryLmaxWriter lmaxWriter = TelemetryLmaxWriter.getInstance();
+  private static Logger rootLogger = LoggerFactory.getLogger("defaultLogger");
+  private static Logger queryLogger = LoggerFactory.getLogger("queryLogger");
 
   /** To log only message. */
   public static void log(String message) {
@@ -61,8 +65,7 @@ public class ProjectLogger {
     params.put(JsonKey.ERROR, projectCommonException.getCode());
     params.put(JsonKey.STACKTRACE, generateStackTrace(e.getStackTrace()));
     request.setRequest(telemetryInfo);
-    //		lmaxWriter.submitMessage(request);
-
+    TelemetryWriter.write(request);
   }
 
   private static String generateStackTrace(StackTraceElement[] elements) {
@@ -188,5 +191,17 @@ public class ProjectLogger {
       ProjectLogger.log(e.getMessage(), e);
     }
     return jsonMessage;
+  }
+
+  public static void logQuery(String query, RequestContext requestContext) {
+    if(isDebugEnabled(requestContext)) {
+     // queryLogger.debug(query, StructuredArguments.entries(requestContext.getContextMap()));
+    } else {
+      queryLogger.debug(query);
+    }
+  }
+
+  private static boolean isDebugEnabled(RequestContext requestContext) {
+    return (null != requestContext && StringUtils.equalsIgnoreCase("true", requestContext.getDebugEnabled()));
   }
 }

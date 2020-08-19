@@ -111,6 +111,18 @@
                     <artifactId>slf4j-api</artifactId>
                     <groupId>org.slf4j</groupId>
                 </exclusion>
+                <exclusion>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-protobuf_2.11</artifactId>
+                </exclusion>
+                <exclusion>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-stream_2.11</artifactId>
+                </exclusion>
+                <exclusion>
+                  <groupId>com.typesafe.akka</groupId>
+                  <artifactId>akka-actor_2.11</artifactId>
+                </exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -187,6 +199,23 @@
 			<artifactId>logback-kafka-appender</artifactId>
 			<version>0.2.0-RC2</version>
 		</dependency>
+        <!--<dependency>
+          <groupId>ch.qos.logback.contrib</groupId>
+          <artifactId>logback-jackson</artifactId>
+          <version>0.1.5</version>
+        </dependency>
+
+        &lt;!&ndash; ch.qos.logback.contrib.json.classic.JsonLayout &ndash;&gt;
+        <dependency>
+          <groupId>ch.qos.logback.contrib</groupId>
+          <artifactId>logback-json-classic</artifactId>
+          <version>0.1.5</version>
+        </dependency>
+        <dependency>
+          <groupId>net.logstash.logback</groupId>
+          <artifactId>logstash-logback-encoder</artifactId>
+          <version>6.3</version>
+        </dependency>-->
 	</dependencies>
 	<build>
 		<sourceDirectory>${basedir}/app</sourceDirectory>
