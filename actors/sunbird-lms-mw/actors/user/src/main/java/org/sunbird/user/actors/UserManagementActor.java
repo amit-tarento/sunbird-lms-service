@@ -1028,7 +1028,7 @@ public class UserManagementActor extends BaseActor {
     Response syncResponse = new Response();
     syncResponse.putAll(response.getResult());
 
-    if (null != resp && userMap.containsKey("sync") && (boolean) userMap.get("sync")) {
+    if (null != resp) {
       Map<String, Object> userDetails =
           Util.getUserDetails(userId, getActorRef(ActorOperations.GET_SYSTEM_SETTING.getValue()));
       Future<Response> future =
