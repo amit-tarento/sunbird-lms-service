@@ -106,7 +106,7 @@ public class OTPActor extends BaseActor {
     logger.info(
         request.getRequestContext(),
         "OTPActor:sendOTP : Calling SendOTPActor for Key = " + maskId(key, type));
-    sendOTP(request, otp, key, request.getRequestContext());
+    // sendOTP(request, otp, key, request.getRequestContext());
 
     Response response = new Response();
     response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
