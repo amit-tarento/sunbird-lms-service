@@ -1,8 +1,14 @@
 package controllers.notesmanagement;
 
+import static controllers.TestUtil.mapToJson;
+import static org.junit.Assert.assertEquals;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import controllers.BaseApplicationTest;
 import controllers.DummyActor;
+import java.util.HashMap;
+import java.util.Map;
 import modules.OnRequestHandler;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -10,22 +16,18 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.util.JsonKey;
 import play.libs.Json;
 import play.mvc.Http.RequestBuilder;
 import play.mvc.Result;
 import play.test.Helpers;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static controllers.TestUtil.mapToJson;
-import static org.junit.Assert.assertEquals;
+import util.RequestInterceptor;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(PowerMockRunner.class)
@@ -41,8 +43,17 @@ public class NotesControllerTest extends BaseApplicationTest {
   private static String NOTE_ID = "noteId";
 
   @Before
-  public void before() {
+  public void before() throws Exception {
     setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
   }
 
   @Test
@@ -54,8 +65,8 @@ public class NotesControllerTest extends BaseApplicationTest {
     String data = mapToJson(requestMap);
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/create").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
@@ -67,16 +78,16 @@ public class NotesControllerTest extends BaseApplicationTest {
 
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/create").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(400, result.status());
   }
 
   @Test
   public void testGetNoteSuccess() {
     RequestBuilder req = new RequestBuilder().uri("/v1/note/read/" + NOTE_ID).method("GET");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
@@ -90,8 +101,8 @@ public class NotesControllerTest extends BaseApplicationTest {
     JsonNode json = Json.parse(data);
     RequestBuilder req =
         new RequestBuilder().bodyJson(json).uri("/v1/note/update/" + NOTE_ID).method("PATCH");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
@@ -106,8 +117,8 @@ public class NotesControllerTest extends BaseApplicationTest {
     JsonNode json = Json.parse(data);
     RequestBuilder req =
         new RequestBuilder().bodyJson(json).uri("/v1/note/delete/123").method("DELETE");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
@@ -123,8 +134,8 @@ public class NotesControllerTest extends BaseApplicationTest {
 
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/search").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 

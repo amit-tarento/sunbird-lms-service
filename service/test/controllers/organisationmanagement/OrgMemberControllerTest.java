@@ -1,15 +1,24 @@
 package controllers.organisationmanagement;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import controllers.BaseApplicationTest;
 import controllers.DummyActor;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import modules.OnRequestHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.response.ResponseParams;
 import org.sunbird.common.models.util.JsonKey;
@@ -20,13 +29,7 @@ import play.libs.Json;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.test.Helpers;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import util.RequestInterceptor;
 
 @PrepareForTest(OnRequestHandler.class)
 public class OrgMemberControllerTest extends BaseApplicationTest {
@@ -35,8 +38,18 @@ public class OrgMemberControllerTest extends BaseApplicationTest {
   private static String userId = "someUserId";
 
   @Before
-  public void before() {
-    setup(DummyActor.class);}
+  public void before() throws Exception {
+    setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
+  }
 
   @Test
   public void testAddMemberToOrganisationSuccess() {
@@ -157,7 +170,7 @@ public class OrgMemberControllerTest extends BaseApplicationTest {
     } else {
       req = new Http.RequestBuilder().uri(url).method(method);
     }
-    //req.headers(new Http.Headers(headerMap));
+    // req.headers(new Http.Headers(headerMap));
     Result result = Helpers.route(application, req);
     return result;
   }
@@ -189,9 +202,9 @@ public class OrgMemberControllerTest extends BaseApplicationTest {
       }
     } catch (Exception e) {
       ProjectLogger.log(
-              "BaseControllerTest:getResponseCode: Exception occurred with error message = "
-                      + e.getMessage(),
-              LoggerEnum.ERROR.name());
+          "BaseControllerTest:getResponseCode: Exception occurred with error message = "
+              + e.getMessage(),
+          LoggerEnum.ERROR.name());
     }
     return "";
   }

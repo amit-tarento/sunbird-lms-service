@@ -7,20 +7,14 @@ import akka.actor.ActorSystem;
 import akka.actor.Props;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import modules.OnRequestHandler;
 import modules.StartModule;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.response.ResponseParams;
-import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerEnum;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.telemetry.util.TelemetryWriter;
@@ -35,16 +29,12 @@ import util.RequestInterceptor;
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
 @PrepareForTest({RequestInterceptor.class, TelemetryWriter.class, SunbirdMWService.class})
-public abstract class BaseApplicationTest {
+public class BaseApplicationTest {
   protected Application application;
   private ActorSystem system;
   private Props props;
 
   public <T> void setup(Class<T> actorClass) {
-    PowerMockito.mockStatic(SunbirdMWService.class);
-    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
-    Map userAuthentication = new HashMap<String, String>();
-    userAuthentication.put(JsonKey.USER_ID, "userId");
     try {
       application =
           new GuiceApplicationBuilder()
@@ -57,12 +47,7 @@ public abstract class BaseApplicationTest {
       props = Props.create(actorClass);
       ActorRef subject = system.actorOf(props);
       BaseController.setActorRef(subject);
-      mockStatic(RequestInterceptor.class);
       mockStatic(TelemetryWriter.class);
-      PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
-          .thenReturn(userAuthentication);
-      mockStatic(OnRequestHandler.class);
-      PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
     } catch (Exception e) {
       e.printStackTrace();
     }

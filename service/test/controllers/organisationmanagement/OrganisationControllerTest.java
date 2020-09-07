@@ -2,6 +2,7 @@ package controllers.organisationmanagement;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,7 +15,10 @@ import modules.OnRequestHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.response.ResponseParams;
 import org.sunbird.common.models.util.JsonKey;
@@ -25,6 +29,7 @@ import play.libs.Json;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.test.Helpers;
+import util.RequestInterceptor;
 
 @PrepareForTest(OnRequestHandler.class)
 public class OrganisationControllerTest extends BaseApplicationTest {
@@ -35,8 +40,17 @@ public class OrganisationControllerTest extends BaseApplicationTest {
   private static String status = "1";
 
   @Before
-  public void before() {
+  public void before() throws Exception {
     setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
   }
 
   @Test

@@ -1,6 +1,7 @@
 package controllers.location;
 
 import static org.junit.Assert.assertEquals;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,9 +17,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.util.GeoLocationJsonKey;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.request.HeaderParam;
@@ -46,8 +49,17 @@ public class LocationControllerTest extends BaseApplicationTest {
   private static final String SEARCH_LOCATION_URL = "/v1/location/search";
 
   @Before
-  public void before() {
+  public void before() throws Exception {
     setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
     headerMap = new HashMap<String, String[]>();
     headerMap.put(
         HeaderParam.X_Authenticated_User_Token.getName(),

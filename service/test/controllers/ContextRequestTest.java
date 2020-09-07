@@ -1,23 +1,28 @@
 package controllers;
 
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import modules.OnRequestHandler;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.ProjectLogger;
 import org.sunbird.common.request.HeaderParam;
 import play.libs.Json;
 import play.mvc.Http;
+import util.RequestInterceptor;
 
 @PrepareForTest(OnRequestHandler.class)
 public class ContextRequestTest extends BaseApplicationTest {
@@ -26,8 +31,17 @@ public class ContextRequestTest extends BaseApplicationTest {
   private static Map<String, String[]> headerMap;
 
   @Before
-  public void before() {
+  public void before() throws Exception {
     setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
     headerMap = new HashMap<>();
     headerMap.put(HeaderParam.X_APP_ID.getName(), new String[] {"Some app Id"});
   }

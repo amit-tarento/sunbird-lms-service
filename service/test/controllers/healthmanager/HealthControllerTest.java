@@ -1,6 +1,7 @@
 package controllers.healthmanager;
 
 import static org.junit.Assert.assertEquals;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import controllers.BaseApplicationTest;
@@ -18,6 +19,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+import org.sunbird.actor.service.SunbirdMWService;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.request.HeaderParam;
 import play.mvc.Http.RequestBuilder;
@@ -37,6 +39,15 @@ public class HealthControllerTest extends BaseApplicationTest {
   @Before
   public void before() throws Exception {
     setup(DummyActor.class);
+    mockStatic(RequestInterceptor.class);
+    PowerMockito.mockStatic(SunbirdMWService.class);
+    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
+    Map userAuthentication = new HashMap<String, String>();
+    userAuthentication.put(JsonKey.USER_ID, "userId");
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+        .thenReturn(userAuthentication);
+    mockStatic(OnRequestHandler.class);
+    PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
     headerMap = new HashMap<String, String[]>();
     headerMap.put(HeaderParam.X_Consumer_ID.getName(), new String[] {"Service test consumer"});
     headerMap.put(HeaderParam.X_Device_ID.getName(), new String[] {"Some Device Id"});
