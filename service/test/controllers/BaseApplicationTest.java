@@ -39,12 +39,9 @@ public abstract class BaseApplicationTest {
   protected Application application;
   private ActorSystem system;
   private Props props;
+  protected static Map userAuthentication = new HashMap<String, String>();
 
   public <T> void setup(Class<T> actorClass) {
-    PowerMockito.mockStatic(SunbirdMWService.class);
-    SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
-    Map userAuthentication = new HashMap<String, String>();
-    userAuthentication.put(JsonKey.USER_ID, "userId");
     try {
       application =
           new GuiceApplicationBuilder()
@@ -57,12 +54,15 @@ public abstract class BaseApplicationTest {
       props = Props.create(actorClass);
       ActorRef subject = system.actorOf(props);
       BaseController.setActorRef(subject);
+      userAuthentication.put(JsonKey.USER_ID, "userId");
       mockStatic(RequestInterceptor.class);
       mockStatic(TelemetryWriter.class);
       PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
           .thenReturn(userAuthentication);
       mockStatic(OnRequestHandler.class);
       PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
+      PowerMockito.mockStatic(SunbirdMWService.class);
+      SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
     } catch (Exception e) {
       e.printStackTrace();
     }
