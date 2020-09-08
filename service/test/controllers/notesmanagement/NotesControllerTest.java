@@ -1,8 +1,13 @@
 package controllers.notesmanagement;
 
+import static controllers.TestUtil.mapToJson;
+import static org.junit.Assert.assertEquals;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import controllers.BaseApplicationTest;
 import controllers.DummyActor;
+import java.util.HashMap;
+import java.util.Map;
 import modules.OnRequestHandler;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -18,14 +23,6 @@ import play.libs.Json;
 import play.mvc.Http.RequestBuilder;
 import play.mvc.Result;
 import play.test.Helpers;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static controllers.TestUtil.mapToJson;
-import static org.junit.Assert.assertEquals;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(PowerMockRunner.class)
@@ -48,40 +45,44 @@ public class NotesControllerTest extends BaseApplicationTest {
   @Test
   @Ignore
   public void testCreateNoteSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     requestMap.put(
         JsonKey.REQUEST, getCreateNoteRequest(USER_ID, COURSE_ID, CONTENT_ID, NOTE, TITLE));
     String data = mapToJson(requestMap);
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/create").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
   @Test
   public void testCreateNoteFailureWithInvalidRequestData() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     requestMap.put(JsonKey.REQUEST, getCreateNoteRequest(USER_ID, "", "", "", TITLE));
     String data = mapToJson(requestMap);
 
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/create").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(400, result.status());
   }
 
   @Test
   public void testGetNoteSuccess() {
+    mock();
     RequestBuilder req = new RequestBuilder().uri("/v1/note/read/" + NOTE_ID).method("GET");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
   @Test
   public void testUpdateNoteSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     requestMap.put(
         JsonKey.REQUEST, getCreateNoteRequest(USER_ID, COURSE_ID, CONTENT_ID, NOTE, TITLE));
@@ -90,13 +91,14 @@ public class NotesControllerTest extends BaseApplicationTest {
     JsonNode json = Json.parse(data);
     RequestBuilder req =
         new RequestBuilder().bodyJson(json).uri("/v1/note/update/" + NOTE_ID).method("PATCH");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
   @Test
   public void testDeleteNoteSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.ID, "123");
@@ -106,13 +108,14 @@ public class NotesControllerTest extends BaseApplicationTest {
     JsonNode json = Json.parse(data);
     RequestBuilder req =
         new RequestBuilder().bodyJson(json).uri("/v1/note/delete/123").method("DELETE");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 
   @Test
   public void testSearchNoteSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     Map<String, Object> filterMap = new HashMap<>();
@@ -123,8 +126,8 @@ public class NotesControllerTest extends BaseApplicationTest {
 
     JsonNode json = Json.parse(data);
     RequestBuilder req = new RequestBuilder().bodyJson(json).uri("/v1/note/search").method("POST");
-    //req.headers(headerMap);
-    Result result = Helpers.route(application,req);
+    // req.headers(headerMap);
+    Result result = Helpers.route(application, req);
     assertEquals(200, result.status());
   }
 

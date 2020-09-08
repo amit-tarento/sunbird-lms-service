@@ -44,6 +44,7 @@ public class BulkUploadControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUploadUser() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -63,6 +64,7 @@ public class BulkUploadControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUploadOrg() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -82,6 +84,7 @@ public class BulkUploadControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUploadStatus() {
+    mock();
     Http.RequestBuilder req = new Http.RequestBuilder().uri("/v1/upload/status/pid").method("GET");
     Result result = Helpers.route(application, req);
     Assert.assertEquals(200, result.status());
@@ -100,6 +103,7 @@ public class BulkUploadControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUploadLocationWithProperData() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -119,6 +123,7 @@ public class BulkUploadControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUploadLocationWithoutMandatoryParamtype() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);

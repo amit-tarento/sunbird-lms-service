@@ -1,13 +1,18 @@
 package controllers.organisationmanagement;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import controllers.BaseApplicationTest;
 import controllers.DummyActor;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import modules.OnRequestHandler;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.sunbird.common.models.response.Response;
@@ -21,26 +26,20 @@ import play.mvc.Http;
 import play.mvc.Result;
 import play.test.Helpers;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 @PrepareForTest(OnRequestHandler.class)
 public class OrgTypeControllerTest extends BaseApplicationTest {
 
   private static String orgTypeName = "org-type-name";
   private static String id = "id";
 
-
   @Before
   public void before() {
-    setup(DummyActor.class);}
+    setup(DummyActor.class);
+  }
 
   @Test
   public void testCreateOrgTypeSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/org/type/create", "POST", createOrgTypeRequest(true, orgTypeName, false, null));
@@ -50,7 +49,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateOrgTypeFailureWithEmptyName() {
-
+    mock();
     Result result =
         performTest("/v1/org/type/create", "POST", createOrgTypeRequest(true, null, false, null));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
@@ -59,7 +58,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateOrgTypeFailureWithoutName() {
-
+    mock();
     Result result =
         performTest("/v1/org/type/create", "POST", createOrgTypeRequest(false, null, false, null));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
@@ -68,6 +67,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testListOrgTypeListSuccess() {
+    mock();
     Result result = performTest("/v1/org/type/list", "GET", null);
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
     assertTrue(getResponseStatus(result) == 200);
@@ -75,6 +75,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgTypeSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/org/type/update", "PATCH", createOrgTypeRequest(true, orgTypeName, true, id));
@@ -84,6 +85,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgTypeFailureWithoutName() {
+    mock();
     Result result =
         performTest("/v1/org/type/update", "PATCH", createOrgTypeRequest(false, null, true, id));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
@@ -92,6 +94,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgTypeFailureWithEmptyName() {
+    mock();
     Result result =
         performTest("/v1/org/type/update", "PATCH", createOrgTypeRequest(true, null, true, id));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
@@ -100,6 +103,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgTypeFailureWithoutId() {
+    mock();
     Result result =
         performTest(
             "/v1/org/type/update", "PATCH", createOrgTypeRequest(true, orgTypeName, false, null));
@@ -125,7 +129,7 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
     } else {
       req = new Http.RequestBuilder().uri(url).method(method);
     }
-    //req.headers(new Http.Headers(headerMap));
+    // req.headers(new Http.Headers(headerMap));
     Result result = Helpers.route(application, req);
     return result;
   }
@@ -157,9 +161,9 @@ public class OrgTypeControllerTest extends BaseApplicationTest {
       }
     } catch (Exception e) {
       ProjectLogger.log(
-              "BaseControllerTest:getResponseCode: Exception occurred with error message = "
-                      + e.getMessage(),
-              LoggerEnum.ERROR.name());
+          "BaseControllerTest:getResponseCode: Exception occurred with error message = "
+              + e.getMessage(),
+          LoggerEnum.ERROR.name());
     }
     return "";
   }

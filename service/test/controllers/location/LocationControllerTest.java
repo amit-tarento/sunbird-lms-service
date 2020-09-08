@@ -57,6 +57,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateLocation() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     when(RequestInterceptor.verifyRequestData(Mockito.anyObject())).thenReturn(userAuthentication);
@@ -77,7 +78,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateLocationWithoutType() {
-
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> locationData = new HashMap<>();
     locationData.put(JsonKey.NAME, LOCATION_NAME);
@@ -94,7 +95,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateLocation() {
-
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> requestBody = new HashMap<>();
     requestBody.put(JsonKey.NAME, LOCATION_NAME);
@@ -113,7 +114,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateLocationWithType() {
-
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> requestBody = new HashMap<>();
     requestBody.put(GeoLocationJsonKey.LOCATION_TYPE, LOCATION_TYPE);
@@ -130,6 +131,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testDeleteLocation() {
+    mock();
     RequestBuilder req =
         new RequestBuilder().uri(DELETE_LOCATION_URL + "/" + LOCATION_ID).method("DELETE");
     // req.headers(headerMap);
@@ -139,7 +141,7 @@ public class LocationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testSearchLocation() {
-
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> requestBody = new HashMap<>();
     Map<String, Object> filters = new HashMap<>();

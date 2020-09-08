@@ -42,6 +42,7 @@ public class CertificateControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesCertificateDownloadSuccess() {
+    mock();
     Result result =
         TestUtil.performTest("/v1/user/certs/download", "POST", getRequest(), application);
     System.out.println("dfkd" + Helpers.contentAsString(result));
@@ -51,6 +52,7 @@ public class CertificateControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCertificateDownloadFailure() {
+    mock();
     Result result =
         TestUtil.performTest("/v1/user/certs/download", "POST", getFailureReq(), application);
     assertEquals(
@@ -59,6 +61,7 @@ public class CertificateControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesCertificateValidateSuccess() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/private/user/v1/certs/validate", "POST", getValidateReq(null), application);
@@ -69,6 +72,7 @@ public class CertificateControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesCertificateValidateFailure() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/private/user/v1/certs/validate",

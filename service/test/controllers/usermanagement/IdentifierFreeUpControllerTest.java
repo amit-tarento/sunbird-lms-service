@@ -40,6 +40,7 @@ public class IdentifierFreeUpControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesIdentifierFreeUpUserSuccess() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/private/user/v1/identifier/freeup", "POST", getRequest(), application);
@@ -49,6 +50,7 @@ public class IdentifierFreeUpControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesIdentifierFreeUpUserFailure() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/private/user/v1/identifier/freeup", "POST", getFailureReq(), application);

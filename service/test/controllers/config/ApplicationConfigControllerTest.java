@@ -45,6 +45,7 @@ public class ApplicationConfigControllerTest extends BaseApplicationTest {
 
   @Test
   public void testupdateSystemSettingsFailure() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);

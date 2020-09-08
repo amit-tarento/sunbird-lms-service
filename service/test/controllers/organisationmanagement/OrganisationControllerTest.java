@@ -41,6 +41,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateOrgSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/org/create",
@@ -52,6 +53,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateSubOrgWithLicenseSuccess() {
+    mock();
     Map<String, Object> reqMap =
         createOrUpdateOrganisationRequest(orgName, null, false, null, null);
     ((Map<String, Object>) reqMap.get(JsonKey.REQUEST)).put(JsonKey.LICENSE, "Test MIT license");
@@ -62,6 +64,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateRootOrgWithLicenseSuccess() {
+    mock();
     Map<String, Object> reqMap = createOrUpdateOrganisationRequest(orgName, null, true, null, null);
     ((Map<String, Object>) reqMap.get(JsonKey.REQUEST)).put(JsonKey.CHANNEL, "test-123");
     ((Map<String, Object>) reqMap.get(JsonKey.REQUEST)).put(JsonKey.LICENSE, "Test MIT license");
@@ -72,6 +75,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateRootOrgWithLicenseEmptyFailure() {
+    mock();
     Map<String, Object> reqMap = createOrUpdateOrganisationRequest(orgName, null, true, null, null);
     ((Map<String, Object>) reqMap.get(JsonKey.REQUEST)).put(JsonKey.CHANNEL, "test-123");
     ((Map<String, Object>) reqMap.get(JsonKey.REQUEST)).put(JsonKey.LICENSE, "");
@@ -82,6 +86,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateOrgFailureWithoutOrgName() {
+    mock();
     Result result =
         performTest(
             "/v1/org/create",
@@ -93,6 +98,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateOrgFailureWithRootOrgWithoutChannel() {
+    mock();
     Result result =
         performTest(
             "/v1/org/create",
@@ -104,6 +110,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/org/update",
@@ -115,6 +122,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgFailureWithoutOrgId() {
+    mock();
     Result result =
         performTest(
             "/v1/org/update",
@@ -126,6 +134,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgStatusSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/org/status/update",
@@ -137,6 +146,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateOrgStatusFailureWithoutOrgId() {
+    mock();
     Result result =
         performTest(
             "/v1/org/status/update",
@@ -148,6 +158,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetOrgDetailsSuccess() {
+    mock();
     Result result = performTest("/v1/org/read", "POST", getOrganisationRequest(orgId, status));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
     assertTrue(getResponseStatus(result) == 200);
@@ -155,6 +166,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetOrgDetailsFailureWithoutOrgId() {
+    mock();
     Result result = performTest("/v1/org/read", "POST", getOrganisationRequest(null, status));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
     assertTrue(getResponseStatus(result) == 400);
@@ -162,6 +174,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testSearchOrgSuccess() {
+    mock();
     Result result =
         performTest("/v1/org/search", "POST", searchOrganisationRequest(status, new HashMap<>()));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
@@ -170,6 +183,7 @@ public class OrganisationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testSearchOrgFailureWithoutFilters() {
+    mock();
     Result result = performTest("/v1/org/search", "POST", searchOrganisationRequest(status, null));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
     assertTrue(getResponseStatus(result) == 400);

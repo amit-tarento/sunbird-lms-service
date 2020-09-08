@@ -30,6 +30,7 @@ public class FeedControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserFeedUnAuthorized() {
+    mock();
     Http.RequestBuilder req =
         new Http.RequestBuilder().uri("/v1/user/feed/1234567890").method("GET");
     Result result = Helpers.route(application, req);
@@ -38,6 +39,7 @@ public class FeedControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserFeed() {
+    mock();
     PowerMockito.mockStatic(FeedRequestValidator.class);
     PowerMockito.when(
             FeedRequestValidator.userIdValidation(Mockito.anyString(), Mockito.anyString()))

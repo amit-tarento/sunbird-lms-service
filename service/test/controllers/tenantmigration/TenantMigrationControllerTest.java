@@ -43,6 +43,7 @@ public class TenantMigrationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testMigrationUserSuccess() {
+    mock();
     Result result =
         TestUtil.performTest("/v1/user/migrate", "POST", getSuccessMigrationReq(), application);
     assertEquals(
@@ -51,6 +52,7 @@ public class TenantMigrationControllerTest extends BaseApplicationTest {
 
   @Test
   public void testMigrationUserFailure() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/v1/user/migrate", "POST", getFailureMigrationReq(JsonKey.CHANNEL), application);
@@ -60,6 +62,7 @@ public class TenantMigrationControllerTest extends BaseApplicationTest {
 
   @Test
   public void tesPrivatetMigrationUserSuccess() {
+    mock();
     Result result =
         TestUtil.performTest(
             "/private/user/v1/migrate", "PATCH", getSuccessMigrationReq(), application);

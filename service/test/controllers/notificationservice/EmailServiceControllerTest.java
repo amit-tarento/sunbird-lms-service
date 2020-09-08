@@ -54,6 +54,7 @@ public class EmailServiceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testsendMail() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -82,6 +83,7 @@ public class EmailServiceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testsendMailWithInvalidRequestData() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -110,6 +112,7 @@ public class EmailServiceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testsendNotification() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -134,6 +137,7 @@ public class EmailServiceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testsendNotificationWithInvalidRequestData() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);

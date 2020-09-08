@@ -69,7 +69,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserSuccess() {
-
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -80,7 +80,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserV3Success() {
-
+    mock();
     Result result =
         performTest(
             "/v1/user/signup",
@@ -91,6 +91,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserV3SyncSuccess() {
+    mock();
     Result result =
         performTest(
             "/v3/user/create",
@@ -101,6 +102,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserV3WithInvalidPassLength() {
+    mock();
     Result result =
         performTest(
             "/v1/user/signup",
@@ -112,6 +114,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserWithInvalidPassLength() {
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -123,6 +126,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserWithOutUpperCasePass() {
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -134,6 +138,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserWithOutSpecialCharPass() {
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -145,6 +150,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserWithCorrectPass() {
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -155,6 +161,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserV3WithCorrectPass() {
+    mock();
     Result result =
         performTest(
             "/v1/user/signup",
@@ -165,6 +172,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserFailureWithoutContentType() {
+    mock();
     String data = (String) createOrUpdateUserRequest(userName, phoneNumber, null, false, null);
     RequestBuilder req = new RequestBuilder().bodyText(data).uri("/v1/user/create").method("POST");
     // req.headers(headerMap);
@@ -175,6 +183,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateUserFailureWithInvalidPhoneNumber() {
+    mock();
     Result result =
         performTest(
             "/v1/user/create",
@@ -186,6 +195,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateUserSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/user/update",
@@ -197,6 +207,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateUserFailureWithInvalidPhoneNumber() {
+    mock();
     Result result =
         performTest(
             "/v1/user/update",
@@ -208,6 +219,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserDetailsSuccessByUserId() {
+    mock();
     Result result =
         performTest("/v1/user/read/" + userId, "GET", (Map) getUserRequest(userId, null));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
@@ -216,6 +228,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserDetailsV3SuccessByUserId() {
+    mock();
     Result result =
         performTest("/v3/user/read/" + userId, "GET", (Map) getUserRequest(userId, null));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
@@ -224,6 +237,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserDetailsSuccessByLoginId() {
+    mock();
     Result result = performTest("/v1/user/getuser", "POST", (Map) getUserRequest(null, loginId));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
     assertTrue(getResponseStatus(result) == 200);
@@ -231,6 +245,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetUserDetailsFailureWithoutLoginId() {
+    mock();
     Result result = performTest("/v1/user/getuser", "POST", getUserRequest(null, null));
     assertEquals(getResponseCode(result), ResponseCode.loginIdRequired.getErrorCode());
     assertTrue(getResponseStatus(result) == 400);
@@ -238,6 +253,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testSearchUserSuccess() {
+    mock();
     Result result = performTest("/v1/user/search", "POST", searchUserRequest(new HashMap<>()));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
     assertTrue(getResponseStatus(result) == 200);
@@ -245,6 +261,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testSearchUserFailureWithoutFilter() {
+    mock();
     Result result = performTest("/v1/user/getuser", "POST", searchUserRequest(null));
     assertEquals(getResponseCode(result), ResponseCode.loginIdRequired.getErrorCode());
     assertTrue(getResponseStatus(result) == 400);
@@ -252,6 +269,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateUserFrameworkSuccess() {
+    mock();
     Result result =
         performTest(UPDATE_URL, "PATCH", (Map) updateUserFrameworkRequest(userId, "NCF", true));
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
@@ -260,6 +278,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateUserFrameworkFailure() {
+    mock();
     Result result =
         performTest(UPDATE_URL, "PATCH", (Map) updateUserFrameworkRequest(userId, "NCF", false));
     assertEquals(getResponseCode(result), ResponseCode.mandatoryParamsMissing.getErrorCode());
@@ -268,6 +287,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUserExistsWithValidEmail() {
+    mock();
     Result result = performTest(USER_EXISTS_API.concat("email/demo@gmail.com"), "GET", null);
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
     assertTrue(getResponseStatus(result) == 200);
@@ -275,24 +295,28 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUserExistsWithInValidEmail() {
+    mock();
     Result result = performTest(USER_EXISTS_API.concat("email/demogmail.com"), "GET", null);
     assertTrue(getResponseStatus(result) == 400);
   }
 
   @Test
   public void testUserExistsWithValidPhone() {
+    mock();
     Result result = performTest(USER_EXISTS_API.concat("phone/9876543210"), "GET", null);
     assertTrue(getResponseStatus(result) == 200);
   }
 
   @Test
   public void testUserExistsWithInValidPhone() {
+    mock();
     Result result = performTest(USER_EXISTS_API.concat("phone/98765432103"), "GET", null);
     assertTrue(getResponseStatus(result) == 400);
   }
 
   @Test
   public void testUpdateUserDeclarations() {
+    mock();
     Result result =
         performTest("/v1/user/declarations", "PATCH", (Map) createUpdateUserDeclrationRequests());
     assertEquals(getResponseCode(result), ResponseCode.success.getErrorCode().toLowerCase());
@@ -461,6 +485,7 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testGetManagedUsersSuccess() {
+    mock();
     Result result =
         performTest(
             "/v1/user/managed/102fcbd2-8ec1-4870-b9e1-5dc01f2acc75?withTokens=false", "GET", null);
@@ -470,7 +495,8 @@ public class UserControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCaptchaUserExists2() throws Exception {
-    CaptchaHelper captchaHelper = mock(CaptchaHelper.class);
+    mock();
+    CaptchaHelper captchaHelper = PowerMockito.mock(CaptchaHelper.class);
     when(captchaHelper.validate(Mockito.anyString(), Mockito.anyString())).thenReturn(true);
     PowerMockito.mockStatic(HttpClientUtil.class);
     PowerMockito.mockStatic(ProjectUtil.class);

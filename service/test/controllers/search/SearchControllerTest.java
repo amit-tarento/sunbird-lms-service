@@ -52,6 +52,7 @@ public class SearchControllerTest extends BaseApplicationTest {
 
   @Test
   public void testcompositeSearch() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);
@@ -73,6 +74,7 @@ public class SearchControllerTest extends BaseApplicationTest {
 
   @Test
   public void testsync() {
+    mock();
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "uuiuhcf784508 8y8c79-fhh");
     PowerMockito.mockStatic(RequestInterceptor.class);

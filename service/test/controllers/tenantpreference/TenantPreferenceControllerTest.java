@@ -45,6 +45,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateTenantPreferenceSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
@@ -59,6 +60,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreatePreferenceWithMandatoryParamOrgId() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
@@ -69,6 +71,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testCreateTenantPreferenceWithDataTypeError() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
@@ -81,6 +84,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testUpdateTenantPreferenceSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
@@ -95,6 +99,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testReadTenantPreferenceSuccess() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
@@ -108,6 +113,7 @@ public class TenantPreferenceControllerTest extends BaseApplicationTest {
 
   @Test
   public void testReadPreferenceWithoutMandatoryParamOrgId() {
+    mock();
     Map<String, Object> requestMap = new HashMap<>();
     Map<String, Object> innerMap = new HashMap<>();
     innerMap.put(JsonKey.KEY, "teacher");
