@@ -30,17 +30,25 @@ import play.inject.guice.GuiceApplicationBuilder;
 import play.mvc.Http;
 import play.mvc.Result;
 import play.test.Helpers;
+import util.Attrs;
 import util.RequestInterceptor;
 
 @RunWith(PowerMockRunner.class)
 @PowerMockIgnore("javax.management.*")
-@PrepareForTest({RequestInterceptor.class, TelemetryWriter.class, SunbirdMWService.class})
+@PrepareForTest({
+  RequestInterceptor.class,
+  TelemetryWriter.class,
+  SunbirdMWService.class,
+  Attrs.class
+})
 public abstract class BaseApplicationTest {
   protected Application application;
   private ActorSystem system;
   private Props props;
 
   public <T> void setup(Class<T> actorClass) {
+    // PowerMockito.mockStatic(Attrs.class);
+    // PowerMockito.mockStatic(TypedKey.class);
     try {
       application =
           new GuiceApplicationBuilder()
@@ -62,15 +70,16 @@ public abstract class BaseApplicationTest {
   public static void mock() {
     Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "userId");
-    PowerMockito.mockStatic(RequestInterceptor.class);
-    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.any()))
-        .thenReturn(userAuthentication);
-    PowerMockito.mockStatic(OnRequestHandler.class);
     try {
+      PowerMockito.mockStatic(OnRequestHandler.class);
       PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
+      PowerMockito.mockStatic(RequestInterceptor.class);
+      PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.any(Http.Request.class)))
+          .thenReturn(userAuthentication);
     } catch (Exception e) {
 
     }
+
     PowerMockito.mockStatic(SunbirdMWService.class);
     SunbirdMWService.tellToBGRouter(Mockito.any(), Mockito.any());
   }

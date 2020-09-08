@@ -30,9 +30,9 @@ import util.RequestInterceptor;
 
 public class OnRequestHandler implements ActionCreator {
 
-  private static LoggerUtil logger = new LoggerUtil(OnRequestHandler.class);
+  private LoggerUtil logger = new LoggerUtil(OnRequestHandler.class);
   private ObjectMapper mapper = new ObjectMapper();
-  private static String custodianOrgHashTagId;
+  private String custodianOrgHashTagId;
   public static boolean isServiceHealthy = true;
 
   @Override
@@ -119,7 +119,8 @@ public class OnRequestHandler implements ActionCreator {
     return CompletableFuture.completedFuture(Results.status(responseCode, Json.toJson(resp)));
   }
 
-  Http.Request initializeRequestInfo(Http.Request request, String userId, String requestId) {
+  private Http.Request initializeRequestInfo(
+      Http.Request request, String userId, String requestId) {
     try {
       String actionMethod = request.method();
       String url = request.uri();
@@ -213,7 +214,7 @@ public class OnRequestHandler implements ActionCreator {
     return request;
   }
 
-  private static String getCustodianOrgHashTagId() {
+  private String getCustodianOrgHashTagId() {
     if (custodianOrgHashTagId != null) {
       return custodianOrgHashTagId;
     }
