@@ -39,8 +39,6 @@ public abstract class BaseApplicationTest {
   protected Application application;
   private ActorSystem system;
   private Props props;
-  protected static Map userAuthentication = new HashMap<String, String>();
-  protected static RequestInterceptor requestInterceptor;
 
   public <T> void setup(Class<T> actorClass) {
     try {
@@ -62,11 +60,12 @@ public abstract class BaseApplicationTest {
   }
 
   public static void mock() {
+    Map userAuthentication = new HashMap<String, String>();
     userAuthentication.put(JsonKey.USER_ID, "userId");
-    mockStatic(RequestInterceptor.class);
-    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.anyObject()))
+    PowerMockito.mockStatic(RequestInterceptor.class);
+    PowerMockito.when(RequestInterceptor.verifyRequestData(Mockito.any()))
         .thenReturn(userAuthentication);
-    mockStatic(OnRequestHandler.class);
+    PowerMockito.mockStatic(OnRequestHandler.class);
     try {
       PowerMockito.doReturn("12345678990").when(OnRequestHandler.class, "getCustodianOrgHashTagId");
     } catch (Exception e) {
