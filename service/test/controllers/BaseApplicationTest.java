@@ -34,7 +34,7 @@ import util.Attrs;
 import util.RequestInterceptor;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*", "com.sun.jmx.*"})
 @PrepareForTest({
   RequestInterceptor.class,
   TelemetryWriter.class,
