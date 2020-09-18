@@ -190,27 +190,6 @@ public class UserProfileReadActor extends BaseActor {
       ProjectCommonException.throwClientErrorException(ResponseCode.userAccountlocked);
     }
 
-    Future<Map<String, Object>> future =
-        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
-
-    Future<Map<String, Object>> rootOrgResultF =
-        fetchRootOrganisation(result, actorMessage.getRequestContext());
-
-    Future<Map<String, Object>> userOrgResponseF =
-        future
-            .zip(rootOrgResultF)
-            .map(
-                new Mapper<
-                    Tuple2<Map<String, Object>, Map<String, Object>>, Map<String, Object>>() {
-                  @Override
-                  public Map<String, Object> apply(
-                      Tuple2<Map<String, Object>, Map<String, Object>> parameter) {
-                    Map<String, Object> userMap = parameter._1;
-                    userMap.put(JsonKey.ROOT_ORG, parameter._2);
-                    return userMap;
-                  }
-                },
-                getContext().dispatcher());
     // having check for removing private filed from user , if call user and response
     // user data id is not same.
     String requestedById =
@@ -232,6 +211,10 @@ public class UserProfileReadActor extends BaseActor {
     if (StringUtils.isNotEmpty(managedBy) && !managedBy.equals(requestedById)) {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
+
+    Future<List<Map<String, Object>>> declarationsF = null;
+    Future<Object> extraFieldsfuture = null;
+    List<Future<List<Map<String, String>>>> externalIdsFuture = new ArrayList<>();
     try {
       if (!((userId).equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
           && !showMaskedData) {
@@ -247,44 +230,10 @@ public class UserProfileReadActor extends BaseActor {
           if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
             String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
             if (requestFields.contains(JsonKey.DECLARATIONS)) {
-              Future<List<Map<String, Object>>> declarationsF =
-                  fetchUserDeclarations(userId, actorMessage.getRequestContext());
-              userOrgResponseF =
-                  userOrgResponseF
-                      .zip(declarationsF)
-                      .map(
-                          new Mapper<
-                              Tuple2<Map<String, Object>, List<Map<String, Object>>>,
-                              Map<String, Object>>() {
-                            @Override
-                            public Map<String, Object> apply(
-                                Tuple2<Map<String, Object>, List<Map<String, Object>>> parameter) {
-                              Map<String, Object> userMap = parameter._1;
-                              userMap.put(JsonKey.DECLARATIONS, parameter._2);
-                              return userMap;
-                            }
-                          },
-                          getContext().dispatcher());
+              declarationsF = fetchUserDeclarations(userId, actorMessage.getRequestContext());
             }
             if (requestFields.contains(JsonKey.EXTERNAL_IDS)) {
-              Future<List<Map<String, String>>> resExternalIdsF =
-                  fetchExternalIds(actorMessage, userId);
-              userOrgResponseF =
-                  userOrgResponseF
-                      .zip(resExternalIdsF)
-                      .map(
-                          new Mapper<
-                              Tuple2<Map<String, Object>, List<Map<String, String>>>,
-                              Map<String, Object>>() {
-                            @Override
-                            public Map<String, Object> apply(
-                                Tuple2<Map<String, Object>, List<Map<String, String>>> parameter) {
-                              Map<String, Object> userMap = parameter._1;
-                              userMap.put(JsonKey.EXTERNAL_IDS, parameter._2);
-                              return userMap;
-                            }
-                          },
-                          getContext().dispatcher());
+              externalIdsFuture.add(fetchExternalIds(actorMessage, userId));
             }
           }
         } else {
@@ -292,24 +241,8 @@ public class UserProfileReadActor extends BaseActor {
           logger.info(
               actorMessage.getRequestContext(),
               "Get external Ids from both declarations and usr_external_identity for merge them");
-          Future<List<Map<String, String>>> dbResExternalIdsF =
-              fetchUserExternalIdentity(userId, actorMessage.getRequestContext());
-          userOrgResponseF =
-              userOrgResponseF
-                  .zip(dbResExternalIdsF)
-                  .map(
-                      new Mapper<
-                          Tuple2<Map<String, Object>, List<Map<String, String>>>,
-                          Map<String, Object>>() {
-                        @Override
-                        public Map<String, Object> apply(
-                            Tuple2<Map<String, Object>, List<Map<String, String>>> parameter) {
-                          Map<String, Object> userMap = parameter._1;
-                          userMap.put(JsonKey.EXTERNAL_IDS, parameter._2);
-                          return userMap;
-                        }
-                      },
-                      getContext().dispatcher());
+          externalIdsFuture.add(
+              fetchUserExternalIdentity(userId, actorMessage.getRequestContext()));
         }
       }
     } catch (Exception e) {
@@ -321,80 +254,177 @@ public class UserProfileReadActor extends BaseActor {
     }
     if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
       String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
-      Future<Object> extraFieldsfuture =
+      extraFieldsfuture =
           addExtraFieldsInUserProfileResponse(
               result, requestFields, actorMessage.getRequestContext());
-      userOrgResponseF =
-          userOrgResponseF
-              .zip(extraFieldsfuture)
-              .map(
-                  new Mapper<Tuple2<Map<String, Object>, Object>, Map<String, Object>>() {
-                    @Override
-                    public Map<String, Object> apply(
-                        Tuple2<Map<String, Object>, Object> parameter) {
-                      Map<String, Object> userMap = parameter._1;
-                      return userMap;
-                    }
-                  },
-                  getContext().dispatcher());
-
     } else {
       result.remove(JsonKey.MISSING_FIELDS);
       result.remove(JsonKey.COMPLETENESS);
     }
 
-    if (null != result) {
-      UserUtility.decryptUserDataFrmES(result);
-      updateTnc(result);
-      // loginId is used internally for checking the duplicate user
-      result.remove(JsonKey.LOGIN_ID);
-      result.remove(JsonKey.ENC_EMAIL);
-      result.remove(JsonKey.ENC_PHONE);
-      // String username = ssoManager.getUsernameById(userId);
-      //  result.put(JsonKey.USERNAME, username);
+    List<Future<Map<String, Object>>> futureList = new ArrayList<>();
 
-      if (withTokens && StringUtils.isNotEmpty(managedBy) && MapUtils.isNotEmpty(result)) {
-        if (StringUtils.isEmpty(managedToken)) {
-          logger.info(
-              actorMessage.getRequestContext(),
-              "UserProfileReadActor: getUserProfileData: calling token generation for: " + userId);
-          List<Map<String, Object>> userList = new ArrayList<Map<String, Object>>();
-          userList.add(result);
-          // Fetch encrypted token from admin utils
-          Map<String, Object> encryptedTokenList =
-              userService.fetchEncryptedToken(
-                  managedBy, userList, actorMessage.getRequestContext());
-          // encrypted token for each managedUser in respList
-          userService.appendEncryptedToken(
-              encryptedTokenList, userList, actorMessage.getRequestContext());
-          result = userList.get(0);
-        } else {
-          result.put(JsonKey.MANAGED_TOKEN, managedToken);
-        }
-      }
+    Future<Map<String, Object>> rootOrgResultF =
+        fetchRootOrganisation(result, actorMessage.getRequestContext());
+    futureList.add(rootOrgResultF);
+
+    // zip externalIds future
+    Future<Iterable<List<Map<String, String>>>> futuresSequence =
+        Futures.sequence(externalIdsFuture, getContext().dispatcher());
+    Future<List<Map<String, String>>> externalIdFuture =
+        futuresSequence.map(
+            new Mapper<Iterable<List<Map<String, String>>>, List<Map<String, String>>>() {
+              @Override
+              public List<Map<String, String>> apply(
+                  Iterable<List<Map<String, String>>> futureResult) {
+                List<Map<String, String>> extList = new ArrayList<>();
+                for (List<Map<String, String>> extIdList : futureResult) {
+                  if (CollectionUtils.isNotEmpty(extIdList)) {
+                    extList.addAll(extIdList);
+                  }
+                }
+                return extList;
+              }
+            },
+            getContext().dispatcher());
+
+    // zip declaration future
+    Future<Map<String, Object>> future1 =
+        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
+    Future<Map<String, Object>> userDeclarationF =
+        future1
+            .zip(declarationsF)
+            .map(
+                new Mapper<
+                    Tuple2<Map<String, Object>, List<Map<String, Object>>>, Map<String, Object>>() {
+                  @Override
+                  public Map<String, Object> apply(
+                      Tuple2<Map<String, Object>, List<Map<String, Object>>> parameter) {
+                    Map<String, Object> userMap = parameter._1;
+                    userMap.put(JsonKey.DECLARATIONS, parameter._2);
+                    return userMap;
+                  }
+                },
+                getContext().dispatcher());
+    futureList.add(userDeclarationF);
+
+    // zip root org
+    Future<Map<String, Object>> future2 =
+        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
+    Future<Map<String, Object>> rootOrgResponseF =
+        future2
+            .zip(rootOrgResultF)
+            .map(
+                new Mapper<
+                    Tuple2<Map<String, Object>, Map<String, Object>>, Map<String, Object>>() {
+                  @Override
+                  public Map<String, Object> apply(
+                      Tuple2<Map<String, Object>, Map<String, Object>> parameter) {
+                    Map<String, Object> userMap = parameter._1;
+                    userMap.put(JsonKey.ROOT_ORG, parameter._2);
+                    return userMap;
+                  }
+                },
+                getContext().dispatcher());
+    futureList.add(rootOrgResponseF);
+
+    // zip fields future
+    Future<Map<String, Object>> future3 =
+        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
+    Future<Map<String, Object>> userFieldsF =
+        future3
+            .zip(extraFieldsfuture)
+            .map(
+                new Mapper<Tuple2<Map<String, Object>, Object>, Map<String, Object>>() {
+                  @Override
+                  public Map<String, Object> apply(Tuple2<Map<String, Object>, Object> parameter) {
+                    Map<String, Object> userMap = parameter._1;
+                    return userMap;
+                  }
+                },
+                getContext().dispatcher());
+    futureList.add(userFieldsF);
+
+    // zip externalid future
+    Future<Map<String, Object>> future4 =
+        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
+    Future<Map<String, Object>> externalIDF =
+        future4
+            .zip(externalIdFuture)
+            .map(
+                new Mapper<
+                    Tuple2<Map<String, Object>, List<Map<String, String>>>, Map<String, Object>>() {
+                  @Override
+                  public Map<String, Object> apply(
+                      Tuple2<Map<String, Object>, List<Map<String, String>>> parameter) {
+                    Map<String, Object> userMap = parameter._1;
+                    userMap.put(JsonKey.EXTERNAL_IDS, parameter._2);
+                    return userMap;
+                  }
+                },
+                getContext().dispatcher());
+    futureList.add(externalIDF);
+
+    if (null != result) {
       final Map<String, Object> finalResult = result;
-      Future<Map<String, Object>> finalResponse =
+      Future<Map<String, Object>> future5 =
           Futures.future(
               () -> {
-                return finalResult;
+                Map<String, Object> finalRst = finalResult;
+                UserUtility.decryptUserDataFrmES(finalRst);
+                updateTnc(finalRst);
+                // loginId is used internally for checking the duplicate user
+                finalRst.remove(JsonKey.LOGIN_ID);
+                finalRst.remove(JsonKey.ENC_EMAIL);
+                finalRst.remove(JsonKey.ENC_PHONE);
+                // String username = ssoManager.getUsernameById(userId);
+                //  result.put(JsonKey.USERNAME, username);
+
+                if (withTokens
+                    && StringUtils.isNotEmpty(managedBy)
+                    && MapUtils.isNotEmpty(finalRst)) {
+                  if (StringUtils.isEmpty(managedToken)) {
+                    logger.info(
+                        actorMessage.getRequestContext(),
+                        "UserProfileReadActor: getUserProfileData: calling token generation for: "
+                            + userId);
+                    List<Map<String, Object>> userList = new ArrayList<>();
+                    userList.add(finalRst);
+                    // Fetch encrypted token from admin utils
+                    Map<String, Object> encryptedTokenList =
+                        userService.fetchEncryptedToken(
+                            managedBy, userList, actorMessage.getRequestContext());
+                    // encrypted token for each managedUser in respList
+                    userService.appendEncryptedToken(
+                        encryptedTokenList, userList, actorMessage.getRequestContext());
+                    finalRst = userList.get(0);
+                  } else {
+                    finalRst.put(JsonKey.MANAGED_TOKEN, managedToken);
+                  }
+                }
+                return finalRst;
               },
               getContext().dispatcher());
+
+      futureList.add(future5);
+
+      Future<Iterable<Map<String, Object>>> userFutureSequence =
+          Futures.sequence(futureList, getContext().dispatcher());
       Future<Response> userResponse =
-          finalResponse
-              .zip(userOrgResponseF)
-              .map(
-                  new Mapper<Tuple2<Map<String, Object>, Map<String, Object>>, Response>() {
-                    @Override
-                    public Response apply(
-                        Tuple2<Map<String, Object>, Map<String, Object>> parameter) {
-                      Map<String, Object> userMap = parameter._1;
-                      userMap.putAll(parameter._2);
-                      Response response = new Response();
-                      response.put(JsonKey.RESPONSE, userMap);
-                      return response;
-                    }
-                  },
-                  getContext().dispatcher());
+          userFutureSequence.map(
+              new Mapper<Iterable<Map<String, Object>>, Response>() {
+                @Override
+                public Response apply(Iterable<Map<String, Object>> futureResult) {
+                  Map<String, Object> userFuture = new HashMap<>();
+                  for (Map<String, Object> future : futureResult) {
+                    userFuture.putAll(future);
+                  }
+                  Response response = new Response();
+                  response.put(JsonKey.RESPONSE, userFuture);
+                  return response;
+                }
+              },
+              getContext().dispatcher());
       return userResponse;
     } else {
       Future<Response> finalResponse =
