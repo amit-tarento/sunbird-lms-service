@@ -232,8 +232,6 @@ public class UserProfileReadActor extends BaseActor {
     if (StringUtils.isNotEmpty(managedBy) && !managedBy.equals(requestedById)) {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
-    Future<Map<String, Object>> userExtIdResponseV3F = null;
-    Future<Map<String, Object>> finalExternalIdsF = null;
     try {
       if (!((userId).equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
           && !showMaskedData) {
@@ -248,11 +246,10 @@ public class UserProfileReadActor extends BaseActor {
         if (StringUtils.isNotEmpty(version) && version.equals(JsonKey.VERSION_3)) {
           if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
             String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
-            Future<Map<String, Object>> userDeclarationsResponseV3 = null;
             if (requestFields.contains(JsonKey.DECLARATIONS)) {
               Future<List<Map<String, Object>>> declarationsF =
                   fetchUserDeclarations(userId, actorMessage.getRequestContext());
-              userDeclarationsResponseV3 =
+              userOrgResponseF =
                   userOrgResponseF
                       .zip(declarationsF)
                       .map(
@@ -268,15 +265,12 @@ public class UserProfileReadActor extends BaseActor {
                             }
                           },
                           getContext().dispatcher());
-            } else {
-              userDeclarationsResponseV3 = userOrgResponseF;
             }
-
             if (requestFields.contains(JsonKey.EXTERNAL_IDS)) {
               Future<List<Map<String, String>>> resExternalIdsF =
                   fetchExternalIds(actorMessage, userId);
-              userExtIdResponseV3F =
-                  userDeclarationsResponseV3
+              userOrgResponseF =
+                  userOrgResponseF
                       .zip(resExternalIdsF)
                       .map(
                           new Mapper<
@@ -291,8 +285,6 @@ public class UserProfileReadActor extends BaseActor {
                             }
                           },
                           getContext().dispatcher());
-            } else {
-              userExtIdResponseV3F = userDeclarationsResponseV3;
             }
           }
         } else {
@@ -302,8 +294,8 @@ public class UserProfileReadActor extends BaseActor {
               "Get external Ids from both declarations and usr_external_identity for merge them");
           Future<List<Map<String, String>>> dbResExternalIdsF =
               fetchUserExternalIdentity(userId, actorMessage.getRequestContext());
-          finalExternalIdsF =
-              userExtIdResponseV3F
+          userOrgResponseF =
+              userOrgResponseF
                   .zip(dbResExternalIdsF)
                   .map(
                       new Mapper<
@@ -319,7 +311,6 @@ public class UserProfileReadActor extends BaseActor {
                       },
                       getContext().dispatcher());
         }
-        finalExternalIdsF = userExtIdResponseV3F;
       }
     } catch (Exception e) {
       logger.error(
@@ -328,14 +319,13 @@ public class UserProfileReadActor extends BaseActor {
           e);
       ProjectCommonException.throwServerErrorException(ResponseCode.userDataEncryptionError);
     }
-    Future<Map<String, Object>> completeUserResF = null;
     if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
       String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
       Future<Object> extraFieldsfuture =
           addExtraFieldsInUserProfileResponse(
               result, requestFields, actorMessage.getRequestContext());
-      completeUserResF =
-          finalExternalIdsF
+      userOrgResponseF =
+          userOrgResponseF
               .zip(extraFieldsfuture)
               .map(
                   new Mapper<Tuple2<Map<String, Object>, Object>, Map<String, Object>>() {
@@ -391,7 +381,7 @@ public class UserProfileReadActor extends BaseActor {
               getContext().dispatcher());
       Future<Response> userResponse =
           finalResponse
-              .zip(completeUserResF)
+              .zip(userOrgResponseF)
               .map(
                   new Mapper<Tuple2<Map<String, Object>, Map<String, Object>>, Response>() {
                     @Override
