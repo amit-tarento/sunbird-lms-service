@@ -154,7 +154,7 @@ public class UserProfileReadActorTest {
     assertTrue(result);
   }
 
-  @Test
+  // @Test
   public void testGetUserProfileSuccessWithValidUserId() {
     reqMap = getUserProfileRequest(VALID_USER_ID);
     setEsResponse(getUserResponseMap());

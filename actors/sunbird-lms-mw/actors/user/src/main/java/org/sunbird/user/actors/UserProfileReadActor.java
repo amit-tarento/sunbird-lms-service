@@ -212,8 +212,9 @@ public class UserProfileReadActor extends BaseActor {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
 
-    Future<List<Map<String, Object>>> declarationsF = null;
-    Future<Object> extraFieldsfuture = null;
+    Future<List<Map<String, Object>>> declarationsF =
+        Futures.future(() -> new ArrayList<>(), getContext().dispatcher());
+    Future<Object> extraFieldsfuture = Futures.future(() -> true, getContext().dispatcher());
     List<Future<List<Map<String, String>>>> externalIdsFuture = new ArrayList<>();
     try {
       if (!((userId).equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
@@ -233,7 +234,8 @@ public class UserProfileReadActor extends BaseActor {
               declarationsF = fetchUserDeclarations(userId, actorMessage.getRequestContext());
             }
             if (requestFields.contains(JsonKey.EXTERNAL_IDS)) {
-              externalIdsFuture.add(fetchExternalIds(actorMessage, userId));
+              externalIdsFuture.add(
+                  fetchExternalIds(userId, result, actorMessage.getRequestContext()));
             }
           }
         } else {
@@ -242,7 +244,7 @@ public class UserProfileReadActor extends BaseActor {
               actorMessage.getRequestContext(),
               "Get external Ids from both declarations and usr_external_identity for merge them");
           externalIdsFuture.add(
-              fetchUserExternalIdentity(userId, actorMessage.getRequestContext()));
+              fetchUserExternalIdentity(userId, result, actorMessage.getRequestContext()));
         }
       }
     } catch (Exception e) {
@@ -434,7 +436,7 @@ public class UserProfileReadActor extends BaseActor {
   }
 
   private Future<List<Map<String, String>>> fetchUserExternalIdentity(
-      String userId, RequestContext context) {
+      String userId, Map<String, Object> user, RequestContext context) {
     Future<List<Map<String, String>>> externalIds =
         Futures.future(
             () -> {
@@ -444,7 +446,28 @@ public class UserProfileReadActor extends BaseActor {
 
                 decryptUserExternalIds(dbResExternalIds, context);
                 // update orgId to provider in externalIds
-                UserUtil.updateExternalIdsWithProvider(dbResExternalIds, context);
+                String rootOrgId = (String) user.get(JsonKey.ROOT_ORG_ID);
+                if (CollectionUtils.isNotEmpty(dbResExternalIds)
+                    && StringUtils.isNotBlank(rootOrgId)) {
+                  String orgId = dbResExternalIds.get(0).get(JsonKey.PROVIDER);
+                  if (orgId.equalsIgnoreCase(rootOrgId)) {
+                    String provider = (String) user.get(JsonKey.CHANNEL);
+                    dbResExternalIds
+                        .stream()
+                        .forEach(
+                            s -> {
+                              if (s.get(JsonKey.PROVIDER) != null
+                                  && s.get(JsonKey.PROVIDER).equals(s.get(JsonKey.ID_TYPE))) {
+                                s.put(JsonKey.ID_TYPE, provider);
+                              }
+                              s.put(JsonKey.PROVIDER, provider);
+                            });
+                  } else {
+                    UserUtil.updateExternalIdsWithProvider(dbResExternalIds, context);
+                  }
+                } else {
+                  UserUtil.updateExternalIdsWithProvider(dbResExternalIds, context);
+                }
                 return dbResExternalIds;
               } catch (Exception ex) {
                 logger.error(context, ex.getMessage(), ex);
@@ -470,23 +493,42 @@ public class UserProfileReadActor extends BaseActor {
     return null;
   }
 
-  private Future<List<Map<String, String>>> fetchExternalIds(Request actorMessage, String userId) {
+  private Future<List<Map<String, String>>> fetchExternalIds(
+      String userId, Map<String, Object> user, RequestContext context) {
     Future<List<Map<String, String>>> externalIds =
         Futures.future(
             () -> {
               try {
                 logger.info(
-                    actorMessage.getRequestContext(),
-                    "Get external Ids explicitly from usr_external_identity for v3");
+                    context, "Get external Ids explicitly from usr_external_identity for v3");
                 List<Map<String, String>> resExternalIds =
-                    userExternalIdentityService.getUserExternalIds(
-                        userId, actorMessage.getRequestContext());
-                decryptUserExternalIds(resExternalIds, actorMessage.getRequestContext());
-                UserUtil.updateExternalIdsWithProvider(
-                    resExternalIds, actorMessage.getRequestContext());
+                    userExternalIdentityService.getUserExternalIds(userId, context);
+                decryptUserExternalIds(resExternalIds, context);
+                String rootOrgId = (String) user.get(JsonKey.ROOT_ORG_ID);
+                if (CollectionUtils.isNotEmpty(resExternalIds)
+                    && StringUtils.isNotBlank(rootOrgId)) {
+                  String orgId = resExternalIds.get(0).get(JsonKey.PROVIDER);
+                  if (orgId.equalsIgnoreCase(rootOrgId)) {
+                    String provider = (String) user.get(JsonKey.CHANNEL);
+                    resExternalIds
+                        .stream()
+                        .forEach(
+                            s -> {
+                              if (s.get(JsonKey.PROVIDER) != null
+                                  && s.get(JsonKey.PROVIDER).equals(s.get(JsonKey.ID_TYPE))) {
+                                s.put(JsonKey.ID_TYPE, provider);
+                              }
+                              s.put(JsonKey.PROVIDER, provider);
+                            });
+                  } else {
+                    UserUtil.updateExternalIdsWithProvider(resExternalIds, context);
+                  }
+                } else {
+                  UserUtil.updateExternalIdsWithProvider(resExternalIds, context);
+                }
                 return resExternalIds;
               } catch (Exception ex) {
-                logger.error(actorMessage.getRequestContext(), ex.getMessage(), ex);
+                logger.error(context, ex.getMessage(), ex);
               }
               return new ArrayList<>();
             },
