@@ -887,26 +887,29 @@ public class UserProfileReadActor extends BaseActor {
             });
       }
     }
-    List<String> locList = new ArrayList<>(locationSet);
-    List<String> locationFields =
-        Arrays.asList(JsonKey.CODE, JsonKey.NAME, JsonKey.TYPE, JsonKey.PARENT_ID, JsonKey.ID);
+    if (CollectionUtils.isNotEmpty(locationSet)) {
+      List<String> locList = new ArrayList<>(locationSet);
+      List<String> locationFields =
+          Arrays.asList(JsonKey.CODE, JsonKey.NAME, JsonKey.TYPE, JsonKey.PARENT_ID, JsonKey.ID);
+      Response locationResponse =
+          cassandraOperation.getPropertiesValueById(
+              "sunbird", "location", locList, locationFields, context);
+      List<Map<String, Object>> locationResponseList =
+          (List<Map<String, Object>>) locationResponse.get(JsonKey.RESPONSE);
 
-    Response locationResponse =
-        cassandraOperation.getPropertiesValueById(
-            "sunbird", "location", locList, locationFields, context);
-    List<Map<String, Object>> locationResponseList =
-        (List<Map<String, Object>>) locationResponse.get(JsonKey.RESPONSE);
-
-    Map<String, Map<String, Object>> locationInfoMap =
-        locationResponseList
-            .stream()
-            .collect(
-                Collectors.toMap(
-                    obj -> {
-                      return (String) obj.get("id");
-                    },
-                    val -> val));
-    return locationInfoMap;
+      Map<String, Map<String, Object>> locationInfoMap =
+          locationResponseList
+              .stream()
+              .collect(
+                  Collectors.toMap(
+                      obj -> {
+                        return (String) obj.get("id");
+                      },
+                      val -> val));
+      return locationInfoMap;
+    } else {
+      return new HashMap<>();
+    }
   }
 
   private void prepUserOrgInfoWithAdditionalData(
@@ -919,9 +922,11 @@ public class UserProfileReadActor extends BaseActor {
       usrOrg.put(JsonKey.CHANNEL, orgInfo.get(JsonKey.CHANNEL));
       usrOrg.put(JsonKey.HASHTAGID, orgInfo.get(JsonKey.HASHTAGID));
       usrOrg.put(JsonKey.LOCATION_IDS, orgInfo.get(JsonKey.LOCATION_IDS));
-      usrOrg.put(
-          JsonKey.LOCATIONS,
-          prepLocationFields((List<String>) orgInfo.get(JsonKey.LOCATION_IDS), locationInfoMap));
+      if (MapUtils.isNotEmpty(locationInfoMap)) {
+        usrOrg.put(
+            JsonKey.LOCATIONS,
+            prepLocationFields((List<String>) orgInfo.get(JsonKey.LOCATION_IDS), locationInfoMap));
+      }
     }
   }
 
@@ -1193,9 +1198,6 @@ public class UserProfileReadActor extends BaseActor {
                   List<String> locationFields =
                       Arrays.asList(
                           JsonKey.CODE, JsonKey.NAME, JsonKey.TYPE, JsonKey.PARENT_ID, JsonKey.ID);
-                  List<String> orgfields = new ArrayList<>();
-                  orgfields.add(JsonKey.ID);
-                  orgfields.add(JsonKey.LOCATION_ID);
                   Response locationResponse =
                       cassandraOperation.getPropertiesValueById(
                           "sunbird", "location", locationIds, locationFields, context);
@@ -1207,7 +1209,7 @@ public class UserProfileReadActor extends BaseActor {
               } catch (Exception ex) {
                 logger.error(context, ex.getMessage(), ex);
               }
-              return null;
+              return new ArrayList<>();
             },
             getContext().dispatcher());
     return userLocations;
