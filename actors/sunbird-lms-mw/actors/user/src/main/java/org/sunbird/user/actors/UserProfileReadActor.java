@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -46,7 +45,6 @@ import org.sunbird.user.service.impl.UserServiceImpl;
 import org.sunbird.user.util.UserUtil;
 import scala.Tuple2;
 import scala.concurrent.Await;
-import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
 @ActorConfig(
@@ -74,13 +72,9 @@ public class UserProfileReadActor extends BaseActor {
   private UserService userService = UserServiceImpl.getInstance();
   private static UserExternalIdentityService userExternalIdentityService =
       new UserExternalIdentityServiceImpl();
-  private ExecutionContext ec;
 
   @Override
   public void onReceive(Request request) throws Throwable {
-    if (ec == null) {
-      ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool());
-    }
     Util.initializeContext(request, TelemetryEnvKey.USER);
     if (systemSettingActorRef == null) {
       systemSettingActorRef = getActorRef(ActorOperations.GET_SYSTEM_SETTING.getValue());
@@ -219,7 +213,8 @@ public class UserProfileReadActor extends BaseActor {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
 
-    Future<Map<String, Object>> future = Futures.future(() -> new HashMap<>(), ec);
+    Future<Map<String, Object>> future =
+        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
 
     Future<Map<String, Object>> rootOrgResultF =
         fetchRootOrganisation(result, actorMessage.getRequestContext());
@@ -238,7 +233,7 @@ public class UserProfileReadActor extends BaseActor {
                     return userMap;
                   }
                 },
-                ec);
+                getContext().dispatcher());
     try {
       if (!((userId).equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
           && !showMaskedData) {
@@ -271,7 +266,7 @@ public class UserProfileReadActor extends BaseActor {
                               return userMap;
                             }
                           },
-                          ec);
+                          getContext().dispatcher());
             }
             if (requestFields.contains(JsonKey.EXTERNAL_IDS)) {
               Future<List<Map<String, String>>> resExternalIdsF =
@@ -291,7 +286,7 @@ public class UserProfileReadActor extends BaseActor {
                               return userMap;
                             }
                           },
-                          ec);
+                          getContext().dispatcher());
             }
           }
         } else {
@@ -316,7 +311,7 @@ public class UserProfileReadActor extends BaseActor {
                           return userMap;
                         }
                       },
-                      ec);
+                      getContext().dispatcher());
         }
       }
     } catch (Exception e) {
@@ -326,28 +321,6 @@ public class UserProfileReadActor extends BaseActor {
           e);
       ProjectCommonException.throwServerErrorException(ResponseCode.userDataEncryptionError);
     }
-    if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
-      String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
-      Future<Object> extraFieldsfuture =
-          addExtraFieldsInUserProfileResponse(
-              result, requestFields, actorMessage.getRequestContext());
-      userOrgResponseF =
-          userOrgResponseF
-              .zip(extraFieldsfuture)
-              .map(
-                  new Mapper<Tuple2<Map<String, Object>, Object>, Map<String, Object>>() {
-                    @Override
-                    public Map<String, Object> apply(
-                        Tuple2<Map<String, Object>, Object> parameter) {
-                      Map<String, Object> userMap = parameter._1;
-                      return userMap;
-                    }
-                  },
-                  ec);
-    } else {
-      result.remove(JsonKey.MISSING_FIELDS);
-      result.remove(JsonKey.COMPLETENESS);
-    }
 
     if (null != result) {
       final Map<String, Object> finalResult = result;
@@ -355,6 +328,14 @@ public class UserProfileReadActor extends BaseActor {
           Futures.future(
               () -> {
                 Map<String, Object> finalRst = finalResult;
+                if (null != actorMessage.getContext().get(JsonKey.FIELDS)) {
+                  String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
+                  addExtraFieldsInUserProfile(
+                      finalRst, requestFields, actorMessage.getRequestContext());
+                } else {
+                  finalRst.remove(JsonKey.MISSING_FIELDS);
+                  finalRst.remove(JsonKey.COMPLETENESS);
+                }
                 UserUtility.decryptUserDataFrmES(finalRst);
                 updateTnc(finalRst);
                 // loginId is used internally for checking the duplicate user
@@ -388,7 +369,7 @@ public class UserProfileReadActor extends BaseActor {
                 }
                 return finalRst;
               },
-              ec);
+              getContext().dispatcher());
 
       Future<Response> userResponse =
           userFuture
@@ -405,7 +386,7 @@ public class UserProfileReadActor extends BaseActor {
                       return response;
                     }
                   },
-                  ec);
+                  getContext().dispatcher());
       return userResponse;
     } else {
       Future<Response> finalResponse =
@@ -453,7 +434,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            ec);
+            getContext().dispatcher());
     return externalIds;
   }
 
@@ -511,7 +492,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            ec);
+            getContext().dispatcher());
     return externalIds;
   }
 
@@ -562,7 +543,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            ec);
+            getContext().dispatcher());
     return userDeclarations;
   }
 
@@ -671,157 +652,80 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new HashMap<>();
             },
-            ec);
+            getContext().dispatcher());
     return rootOrg;
   }
 
-  private Future<Object> addExtraFieldsInUserProfileResponse(
-      Map<String, Object> result, String fields, RequestContext context) {
-    List<Future<Object>> futures = new ArrayList<>();
-    if (!StringUtils.isBlank(fields)) {
-      result.put(JsonKey.LAST_LOGIN_TIME, Long.parseLong("0"));
-      if (!fields.contains(JsonKey.COMPLETENESS)) {
-        result.remove(JsonKey.COMPLETENESS);
+  private void fetchTopicOfAssociatedOrgs(Map<String, Object> result, RequestContext context) {
+    try {
+      Set<String> topicSet = new HashSet<>();
+      List<Map<String, Object>> userOrgList =
+          (List<Map<String, Object>>) result.get(JsonKey.ORGANISATIONS);
+      if (!userOrgList.isEmpty()) {
+        List<String> orgIdList =
+            userOrgList
+                .stream()
+                .map(m -> (String) m.get(JsonKey.ORGANISATION_ID))
+                .distinct()
+                .collect(Collectors.toList());
+
+        // fetch all org details from elasticsearch ...
+        if (!orgIdList.isEmpty()) {
+          Util.DbInfo OrgDb = Util.dbInfoMap.get(JsonKey.ORG_DB);
+          List<String> orgfields = new ArrayList<>();
+          orgfields.add(JsonKey.ID);
+          orgfields.add(JsonKey.LOCATION_ID);
+          Response userOrgResponse =
+              cassandraOperation.getPropertiesValueById(
+                  OrgDb.getKeySpace(), OrgDb.getTableName(), orgIdList, orgfields, context);
+          List<Map<String, Object>> userOrgResponseList =
+              (List<Map<String, Object>>) userOrgResponse.get(JsonKey.RESPONSE);
+
+          if (CollectionUtils.isNotEmpty(userOrgResponseList)) {
+            List<String> locationIdList = new ArrayList<>();
+            for (Map<String, Object> org : userOrgResponseList) {
+              String locId = (String) org.get(JsonKey.LOCATION_ID);
+              if (StringUtils.isNotBlank(locId)) {
+                locationIdList.add(locId);
+              }
+            }
+            if (CollectionUtils.isNotEmpty(locationIdList)) {
+              List<String> geoLocationFields = new ArrayList<>();
+              geoLocationFields.add(JsonKey.TOPIC);
+              Response geoLocationResponse =
+                  cassandraOperation.getPropertiesValueById(
+                      geoLocationDbInfo.getKeySpace(),
+                      geoLocationDbInfo.getTableName(),
+                      locationIdList,
+                      geoLocationFields,
+                      context);
+              List<Map<String, Object>> geoLocationResponseList =
+                  (List<Map<String, Object>>) geoLocationResponse.get(JsonKey.RESPONSE);
+              List<String> topicList =
+                  geoLocationResponseList
+                      .stream()
+                      .map(m -> (String) m.get(JsonKey.TOPIC))
+                      .distinct()
+                      .collect(Collectors.toList());
+              topicSet.addAll(topicList);
+            }
+          }
+        }
       }
-      if (!fields.contains(JsonKey.MISSING_FIELDS)) {
-        result.remove(JsonKey.MISSING_FIELDS);
-      }
-      if (fields.contains(JsonKey.TOPIC)) {
-        // fetch the topic details of all user associated orgs and append in the result
-        Future<Object> fetchTopicResponse = fetchTopicOfAssociatedOrgs(result, context);
-        futures.add(fetchTopicResponse);
-      }
-      if (fields.contains(JsonKey.ORGANISATIONS)) {
-        Future<Object> userOrgResponse =
-            updateUserOrgInfo((List) result.get(JsonKey.ORGANISATIONS), context);
-        futures.add(userOrgResponse);
-      }
-      if (fields.contains(JsonKey.ROLES)) {
-        result.put(JsonKey.ROLE_LIST, DataCacheHandler.getUserReadRoleList());
-      }
-      if (fields.contains(JsonKey.LOCATIONS)) {
-        Future<List<Map<String, Object>>> userLocationResponse =
-            getUserLocations((List<String>) result.get(JsonKey.LOCATION_IDS), context);
-        Future<Object> userLocResponse =
-            userLocationResponse.map(
-                new Mapper<List<Map<String, Object>>, Object>() {
-                  @Override
-                  public Object apply(List<Map<String, Object>> responseMap) {
-                    result.put(JsonKey.USER_LOCATIONS, responseMap);
-                    return true;
-                  }
-                },
-                ec);
-        futures.add(userLocResponse);
-        result.remove(JsonKey.LOCATION_IDS);
-      }
+      result.put(JsonKey.TOPICS, topicSet);
+    } catch (Exception ex) {
+      logger.error(context, ex.getMessage(), ex);
     }
-    Future<Iterable<Object>> futuresSequence = Futures.sequence(futures, getContext().dispatcher());
-    Future<Object> future =
-        futuresSequence.map(
-            new Mapper<Iterable<Object>, Object>() {
-              @Override
-              public Object apply(Iterable<Object> futureResult) {
-                return true;
-              }
-            },
-            ec);
-    return future;
   }
 
-  private Future<Object> fetchTopicOfAssociatedOrgs(
-      Map<String, Object> result, RequestContext context) {
-    Future<Object> fetchTopicsResponse =
-        Futures.future(
-            () -> {
-              try {
-                Set<String> topicSet = new HashSet<>();
-                List<Map<String, Object>> userOrgList =
-                    (List<Map<String, Object>>) result.get(JsonKey.ORGANISATIONS);
-                if (!userOrgList.isEmpty()) {
-                  List<String> orgIdList =
-                      userOrgList
-                          .stream()
-                          .map(m -> (String) m.get(JsonKey.ORGANISATION_ID))
-                          .distinct()
-                          .collect(Collectors.toList());
-
-                  // fetch all org details from elasticsearch ...
-                  if (!orgIdList.isEmpty()) {
-                    Util.DbInfo OrgDb = Util.dbInfoMap.get(JsonKey.ORG_DB);
-                    List<String> orgfields = new ArrayList<>();
-                    orgfields.add(JsonKey.ID);
-                    orgfields.add(JsonKey.LOCATION_ID);
-                    Response userOrgResponse =
-                        cassandraOperation.getPropertiesValueById(
-                            OrgDb.getKeySpace(),
-                            OrgDb.getTableName(),
-                            orgIdList,
-                            orgfields,
-                            context);
-                    List<Map<String, Object>> userOrgResponseList =
-                        (List<Map<String, Object>>) userOrgResponse.get(JsonKey.RESPONSE);
-
-                    if (CollectionUtils.isNotEmpty(userOrgResponseList)) {
-                      List<String> locationIdList = new ArrayList<>();
-                      for (Map<String, Object> org : userOrgResponseList) {
-                        String locId = (String) org.get(JsonKey.LOCATION_ID);
-                        if (StringUtils.isNotBlank(locId)) {
-                          locationIdList.add(locId);
-                        }
-                      }
-                      if (CollectionUtils.isNotEmpty(locationIdList)) {
-                        List<String> geoLocationFields = new ArrayList<>();
-                        geoLocationFields.add(JsonKey.TOPIC);
-                        Response geoLocationResponse =
-                            cassandraOperation.getPropertiesValueById(
-                                geoLocationDbInfo.getKeySpace(),
-                                geoLocationDbInfo.getTableName(),
-                                locationIdList,
-                                geoLocationFields,
-                                context);
-                        List<Map<String, Object>> geoLocationResponseList =
-                            (List<Map<String, Object>>) geoLocationResponse.get(JsonKey.RESPONSE);
-                        List<String> topicList =
-                            geoLocationResponseList
-                                .stream()
-                                .map(m -> (String) m.get(JsonKey.TOPIC))
-                                .distinct()
-                                .collect(Collectors.toList());
-                        topicSet.addAll(topicList);
-                      }
-                    }
-                  }
-                }
-                result.put(JsonKey.TOPICS, topicSet);
-                return true;
-              } catch (Exception ex) {
-                logger.error(context, ex.getMessage(), ex);
-              }
-              return true;
-            },
-            ec);
-    return fetchTopicsResponse;
-  }
-
-  private Future<Object> updateUserOrgInfo(
-      List<Map<String, Object>> userOrgs, RequestContext context) {
-    Future<Object> updateUserOrgResponse =
-        Futures.future(
-            () -> {
-              try {
-                Map<String, Map<String, Object>> orgInfoMap = fetchAllOrgById(userOrgs, context);
-                Map<String, Map<String, Object>> locationInfoMap =
-                    fetchAllLocationsById(orgInfoMap, context);
-                prepUserOrgInfoWithAdditionalData(userOrgs, orgInfoMap, locationInfoMap);
-                return true;
-              } catch (Exception ex) {
-                logger.error(context, ex.getMessage(), ex);
-              }
-              return true;
-            },
-            ec);
-    return updateUserOrgResponse;
+  private void updateUserOrgInfo(List<Map<String, Object>> userOrgs, RequestContext context) {
+    try {
+      Map<String, Map<String, Object>> orgInfoMap = fetchAllOrgById(userOrgs, context);
+      Map<String, Map<String, Object>> locationInfoMap = fetchAllLocationsById(orgInfoMap, context);
+      prepUserOrgInfoWithAdditionalData(userOrgs, orgInfoMap, locationInfoMap);
+    } catch (Exception ex) {
+      logger.error(context, ex.getMessage(), ex);
+    }
   }
 
   private Map<String, Map<String, Object>> fetchAllOrgById(
@@ -954,7 +858,7 @@ public class UserProfileReadActor extends BaseActor {
                 return finalResponse;
               }
             },
-            ec);
+            getContext().dispatcher());
     Patterns.pipe(userFinalResponse, getContext().dispatcher()).to(sender());
   }
 
@@ -1167,31 +1071,23 @@ public class UserProfileReadActor extends BaseActor {
     }
   }
 
-  private Future<List<Map<String, Object>>> getUserLocations(
+  private List<Map<String, Object>> getUserLocations(
       List<String> locationIds, RequestContext context) {
-    Future<List<Map<String, Object>>> userLocations =
-        Futures.future(
-            () -> {
-              try {
-                if (CollectionUtils.isNotEmpty(locationIds)) {
-                  List<String> locationFields =
-                      Arrays.asList(
-                          JsonKey.CODE, JsonKey.NAME, JsonKey.TYPE, JsonKey.PARENT_ID, JsonKey.ID);
-                  Response locationResponse =
-                      cassandraOperation.getPropertiesValueById(
-                          "sunbird", "location", locationIds, locationFields, context);
-                  List<Map<String, Object>> locationResponseList =
-                      (List<Map<String, Object>>) locationResponse.get(JsonKey.RESPONSE);
-                  return locationResponseList;
-                }
-                return new ArrayList<>();
-              } catch (Exception ex) {
-                logger.error(context, ex.getMessage(), ex);
-              }
-              return new ArrayList<>();
-            },
-            getContext().dispatcher());
-    return userLocations;
+    try {
+      if (CollectionUtils.isNotEmpty(locationIds)) {
+        List<String> locationFields =
+            Arrays.asList(JsonKey.CODE, JsonKey.NAME, JsonKey.TYPE, JsonKey.PARENT_ID, JsonKey.ID);
+        Response locationResponse =
+            cassandraOperation.getPropertiesValueById(
+                "sunbird", "location", locationIds, locationFields, context);
+        List<Map<String, Object>> locationResponseList =
+            (List<Map<String, Object>>) locationResponse.get(JsonKey.RESPONSE);
+        return locationResponseList;
+      }
+    } catch (Exception ex) {
+      logger.error(context, ex.getMessage(), ex);
+    }
+    return new ArrayList<>();
   }
 
   Future<Response> checkUserExists(Request request, boolean isV1) {
