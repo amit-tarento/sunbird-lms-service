@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -45,6 +46,7 @@ import org.sunbird.user.service.impl.UserServiceImpl;
 import org.sunbird.user.util.UserUtil;
 import scala.Tuple2;
 import scala.concurrent.Await;
+import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
 
 @ActorConfig(
@@ -57,7 +59,8 @@ import scala.concurrent.Future;
     "checkUserExistence",
     "checkUserExistenceV2"
   },
-  asyncTasks = {}
+  asyncTasks = {},
+  dispatcher = "most-used-one-dispatcher"
 )
 public class UserProfileReadActor extends BaseActor {
 
@@ -71,9 +74,13 @@ public class UserProfileReadActor extends BaseActor {
   private UserService userService = UserServiceImpl.getInstance();
   private static UserExternalIdentityService userExternalIdentityService =
       new UserExternalIdentityServiceImpl();
+  private ExecutionContext ec;
 
   @Override
   public void onReceive(Request request) throws Throwable {
+    if (ec == null) {
+      ec = ExecutionContext.fromExecutorService(Executors.newCachedThreadPool());
+    }
     Util.initializeContext(request, TelemetryEnvKey.USER);
     if (systemSettingActorRef == null) {
       systemSettingActorRef = getActorRef(ActorOperations.GET_SYSTEM_SETTING.getValue());
@@ -212,8 +219,7 @@ public class UserProfileReadActor extends BaseActor {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
 
-    Future<Map<String, Object>> future =
-        Futures.future(() -> new HashMap<>(), getContext().dispatcher());
+    Future<Map<String, Object>> future = Futures.future(() -> new HashMap<>(), ec);
 
     Future<Map<String, Object>> rootOrgResultF =
         fetchRootOrganisation(result, actorMessage.getRequestContext());
@@ -232,7 +238,7 @@ public class UserProfileReadActor extends BaseActor {
                     return userMap;
                   }
                 },
-                getContext().dispatcher());
+                ec);
     try {
       if (!((userId).equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
           && !showMaskedData) {
@@ -265,7 +271,7 @@ public class UserProfileReadActor extends BaseActor {
                               return userMap;
                             }
                           },
-                          getContext().dispatcher());
+                          ec);
             }
             if (requestFields.contains(JsonKey.EXTERNAL_IDS)) {
               Future<List<Map<String, String>>> resExternalIdsF =
@@ -285,7 +291,7 @@ public class UserProfileReadActor extends BaseActor {
                               return userMap;
                             }
                           },
-                          getContext().dispatcher());
+                          ec);
             }
           }
         } else {
@@ -310,7 +316,7 @@ public class UserProfileReadActor extends BaseActor {
                           return userMap;
                         }
                       },
-                      getContext().dispatcher());
+                      ec);
         }
       }
     } catch (Exception e) {
@@ -337,7 +343,7 @@ public class UserProfileReadActor extends BaseActor {
                       return userMap;
                     }
                   },
-                  getContext().dispatcher());
+                  ec);
     } else {
       result.remove(JsonKey.MISSING_FIELDS);
       result.remove(JsonKey.COMPLETENESS);
@@ -382,7 +388,7 @@ public class UserProfileReadActor extends BaseActor {
                 }
                 return finalRst;
               },
-              getContext().dispatcher());
+              ec);
 
       Future<Response> userResponse =
           userFuture
@@ -399,7 +405,7 @@ public class UserProfileReadActor extends BaseActor {
                       return response;
                     }
                   },
-                  getContext().dispatcher());
+                  ec);
       return userResponse;
     } else {
       Future<Response> finalResponse =
@@ -447,7 +453,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            getContext().dispatcher());
+            ec);
     return externalIds;
   }
 
@@ -505,7 +511,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            getContext().dispatcher());
+            ec);
     return externalIds;
   }
 
@@ -556,7 +562,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new ArrayList<>();
             },
-            getContext().dispatcher());
+            ec);
     return userDeclarations;
   }
 
@@ -665,7 +671,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return new HashMap<>();
             },
-            getContext().dispatcher());
+            ec);
     return rootOrg;
   }
 
@@ -705,7 +711,7 @@ public class UserProfileReadActor extends BaseActor {
                     return true;
                   }
                 },
-                getContext().dispatcher());
+                ec);
         futures.add(userLocResponse);
         result.remove(JsonKey.LOCATION_IDS);
       }
@@ -719,7 +725,7 @@ public class UserProfileReadActor extends BaseActor {
                 return true;
               }
             },
-            getContext().dispatcher());
+            ec);
     return future;
   }
 
@@ -794,7 +800,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return true;
             },
-            getContext().dispatcher());
+            ec);
     return fetchTopicsResponse;
   }
 
@@ -814,7 +820,7 @@ public class UserProfileReadActor extends BaseActor {
               }
               return true;
             },
-            getContext().dispatcher());
+            ec);
     return updateUserOrgResponse;
   }
 
@@ -948,7 +954,7 @@ public class UserProfileReadActor extends BaseActor {
                 return finalResponse;
               }
             },
-            getContext().dispatcher());
+            ec);
     Patterns.pipe(userFinalResponse, getContext().dispatcher()).to(sender());
   }
 
