@@ -2,7 +2,9 @@ package org.sunbird.user.service.impl;
 
 import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.sunbird.common.request.RequestContext;
+import org.sunbird.learner.util.DataCacheHandler;
 import org.sunbird.user.dao.UserExternalIdentityDao;
 import org.sunbird.user.dao.impl.UserExternalIdentityDaoImpl;
 import org.sunbird.user.service.UserExternalIdentityService;
@@ -49,9 +51,15 @@ public class UserExternalIdentityServiceImpl implements UserExternalIdentityServ
    */
   @Override
   public String getUserV1(String extId, String provider, String idType, RequestContext context) {
-    Map<String, String> providerOrgMap =
-        UserUtil.fetchOrgIdByProvider(Arrays.asList(provider), context);
-    String orgId = UserUtil.getCaseInsensitiveOrgFromProvider(provider, providerOrgMap);
+    String orgId =
+        UserUtil.getCaseInsensitiveOrgFromProvider(
+            provider, DataCacheHandler.getChannelToRootOrgIdLookup());
+    if (StringUtils.isBlank(orgId)) {
+      Map<String, String> providerOrgMap =
+          UserUtil.fetchOrgIdByProvider(Arrays.asList(provider), context);
+      orgId = UserUtil.getCaseInsensitiveOrgFromProvider(provider, providerOrgMap);
+      DataCacheHandler.getChannelToRootOrgIdLookup().put(provider, orgId);
+    }
     return userExternalIdentityDao.getUserIdByExternalId(extId, orgId, context);
   }
 

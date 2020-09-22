@@ -579,4 +579,19 @@ public interface CassandraOperation {
       String column,
       String key,
       RequestContext context);
+
+  /**
+   * Fetch records from user lookup.
+   *
+   * @param keyspaceName Keyspace name
+   * @param tableName Table name
+   * @param partitionKeyMap Column map for partition key
+   * @param context
+   * @return Response consisting of fetched records
+   */
+  Response getRecordsByCompositePartitionKey(
+      String keyspaceName,
+      String tableName,
+      Map<String, Object> partitionKeyMap,
+      RequestContext context);
 }

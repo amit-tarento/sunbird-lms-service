@@ -12,10 +12,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.sunbird.actorutil.systemsettings.SystemSettingClient;
 import org.sunbird.actorutil.systemsettings.impl.SystemSettingClientImpl;
+import org.sunbird.cassandra.CassandraOperation;
 import org.sunbird.common.ElasticSearchHelper;
 import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.factory.EsClientFactory;
 import org.sunbird.common.inf.ElasticSearchService;
+import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.*;
 import org.sunbird.common.models.util.ProjectUtil.EsType;
 import org.sunbird.common.models.util.datasecurity.EncryptionService;
@@ -23,8 +25,10 @@ import org.sunbird.common.request.Request;
 import org.sunbird.common.request.RequestContext;
 import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.dto.SearchDTO;
+import org.sunbird.helper.ServiceFactory;
 import org.sunbird.learner.util.AdminUtilHandler;
 import org.sunbird.learner.util.DataCacheHandler;
+import org.sunbird.learner.util.Util;
 import org.sunbird.models.adminutil.AdminUtilRequestData;
 import org.sunbird.models.systemsetting.SystemSetting;
 import org.sunbird.models.user.User;
@@ -141,6 +145,7 @@ public class UserServiceImpl implements UserService {
 
     Map<String, Object> filters = new HashMap<>();
     filters.put(JsonKey.IS_ROOT_ORG, true);
+    String provider = channel;
     if (StringUtils.isNotBlank(channel)) {
       filters.put(JsonKey.CHANNEL, channel);
     } else {
@@ -148,6 +153,7 @@ public class UserServiceImpl implements UserService {
       // ENV.
       if (StringUtils.isNotBlank(ProjectUtil.getConfigValue(JsonKey.SUNBIRD_DEFAULT_CHANNEL))) {
         filters.put(JsonKey.CHANNEL, ProjectUtil.getConfigValue(JsonKey.SUNBIRD_DEFAULT_CHANNEL));
+        provider = ProjectUtil.getConfigValue(JsonKey.SUNBIRD_DEFAULT_CHANNEL);
       } else {
         throw new ProjectCommonException(
             ResponseCode.mandatoryParamsMissing.getErrorCode(),
@@ -156,18 +162,36 @@ public class UserServiceImpl implements UserService {
             ResponseCode.CLIENT_ERROR.getResponseCode());
       }
     }
-    SearchDTO searchDTO = new SearchDTO();
-    searchDTO.getAdditionalProperties().put(JsonKey.FILTERS, filters);
-    Future<Map<String, Object>> esResultF =
-        esUtil.search(searchDTO, EsType.organisation.getTypeName(), context);
-    Map<String, Object> esResult =
-        (Map<String, Object>) ElasticSearchHelper.getResponseFromFuture(esResultF);
-    if (MapUtils.isNotEmpty(esResult)
-        && CollectionUtils.isNotEmpty((List) esResult.get(JsonKey.CONTENT))) {
-      Map<String, Object> esContent =
-          ((List<Map<String, Object>>) esResult.get(JsonKey.CONTENT)).get(0);
-      if (null != esContent.get(JsonKey.STATUS)) {
-        int status = (int) esContent.get(JsonKey.STATUS);
+    Map<String, Object> organisation = null;
+    String orgId =
+        UserUtil.getCaseInsensitiveOrgFromProvider(
+            provider, DataCacheHandler.getChannelToRootOrgIdLookup());
+    if (StringUtils.isNotBlank(orgId)) {
+      CassandraOperation cassandraOperation = ServiceFactory.getInstance();
+      Util.DbInfo OrgDb = Util.dbInfoMap.get(JsonKey.ORG_DB);
+      Response response =
+          cassandraOperation.getRecordById(
+              OrgDb.getKeySpace(), OrgDb.getTableName(), orgId, context);
+      List<Map<String, Object>> responseList =
+          (List<Map<String, Object>>) response.get(JsonKey.RESPONSE);
+      if (CollectionUtils.isNotEmpty(responseList)) {
+        organisation = responseList.get(0);
+      }
+    } else {
+      SearchDTO searchDTO = new SearchDTO();
+      searchDTO.getAdditionalProperties().put(JsonKey.FILTERS, filters);
+      Future<Map<String, Object>> esResultF =
+          esUtil.search(searchDTO, EsType.organisation.getTypeName(), context);
+      Map<String, Object> esResult =
+          (Map<String, Object>) ElasticSearchHelper.getResponseFromFuture(esResultF);
+      if (MapUtils.isNotEmpty(esResult)
+          && CollectionUtils.isNotEmpty((List) esResult.get(JsonKey.CONTENT))) {
+        organisation = ((List<Map<String, Object>>) esResult.get(JsonKey.CONTENT)).get(0);
+      }
+    }
+    if (MapUtils.isNotEmpty(organisation)) {
+      if (null != organisation.get(JsonKey.STATUS)) {
+        int status = (int) organisation.get(JsonKey.STATUS);
         if (1 != status) {
           ProjectCommonException.throwClientErrorException(
               ResponseCode.errorInactiveOrg,
@@ -180,7 +204,7 @@ public class UserServiceImpl implements UserService {
             ProjectUtil.formatMessage(
                 ResponseCode.errorInactiveOrg.getErrorMessage(), JsonKey.CHANNEL, channel));
       }
-      return (String) esContent.get(JsonKey.ID);
+      return (String) organisation.get(JsonKey.ID);
     } else {
       if (StringUtils.isNotBlank(channel)) {
         throw new ProjectCommonException(
