@@ -14,6 +14,8 @@ import org.sunbird.common.request.RequestContext;
  */
 public interface CassandraOperation {
 
+  public Response batchInsert();
+
   /**
    * @desc This method is used to insert/update record in cassandra db (if primary key exist in
    *     request ,it will update else will insert the record in cassandra db. By default cassandra

@@ -674,7 +674,9 @@ public class UserManagementActor extends BaseActor {
    * @param actorMessage Request
    */
   private void createUser(Request actorMessage) {
-    Util.initializeContext(actorMessage, TelemetryEnvKey.USER);
+
+    cassandraOperation.batchInsert();
+    /* Util.initializeContext(actorMessage, TelemetryEnvKey.USER);
     actorMessage.toLower();
     Map<String, Object> userMap = actorMessage.getRequest();
     String callerId = (String) actorMessage.getContext().get(JsonKey.CALLER_ID);
@@ -756,7 +758,7 @@ public class UserManagementActor extends BaseActor {
       userMap.remove(JsonKey.ORG_EXTERNAL_ID);
       userMap.put(JsonKey.ORGANISATION_ID, orgId);
     }
-    processUserRequest(userMap, callerId, actorMessage);
+    processUserRequest(userMap, callerId, actorMessage);*/
   }
 
   private void validateUserType(

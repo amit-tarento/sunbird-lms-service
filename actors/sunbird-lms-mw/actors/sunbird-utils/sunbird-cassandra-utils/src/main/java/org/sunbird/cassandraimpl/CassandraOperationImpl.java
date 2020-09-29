@@ -12,6 +12,7 @@ import com.datastax.driver.core.querybuilder.Select.Selection;
 import com.datastax.driver.core.querybuilder.Select.Where;
 import com.datastax.driver.core.querybuilder.Update.Assignments;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import org.sunbird.common.exception.ProjectCommonException;
 import org.sunbird.common.models.response.Response;
 import org.sunbird.common.models.util.JsonKey;
 import org.sunbird.common.models.util.LoggerUtil;
+import org.sunbird.common.models.util.ProjectUtil;
 import org.sunbird.common.request.RequestContext;
 import org.sunbird.common.responsecode.ResponseCode;
 import org.sunbird.helper.CassandraConnectionManager;
@@ -39,6 +41,55 @@ public abstract class CassandraOperationImpl implements CassandraOperation {
 
   public CassandraOperationImpl() {
     connectionManager = CassandraConnectionMngrFactory.getInstance();
+  }
+
+  @Override
+  public Response batchInsert() {
+    Session session = connectionManager.getSession("sunbird");
+    BatchStatement batchStatement = new BatchStatement();
+    String userid = ProjectUtil.generateUniqueId();
+    String email = System.currentTimeMillis() + "@yopmail.com";
+    String orgId = ProjectUtil.getUniqueIdFromTimestamp(1);
+    List<String> roles = new ArrayList<>();
+    roles.add("PUBLIC");
+    Statement userQuery =
+        QueryBuilder.insertInto("user")
+            .value("id", userid)
+            .value("firstName", "Amit")
+            .value("lastName", "Kumar")
+            .value("userId", userid)
+            .value("email", email)
+            .setConsistencyLevel(ConsistencyLevel.SERIAL);
+    Statement userLookupQuery =
+        QueryBuilder.insertInto("user_lookup")
+            .value("type", "email")
+            .value("value", email)
+            .value("userId", userid)
+            .setConsistencyLevel(ConsistencyLevel.SERIAL);
+    Statement userOrgQuery =
+        QueryBuilder.insertInto("user_organisation")
+            .value("userId", userid)
+            .value("organisationid", orgId)
+            .value("roles", roles)
+            .value("id", orgId)
+            .setConsistencyLevel(ConsistencyLevel.SERIAL);
+    Statement userExternalIdentityQuery =
+        QueryBuilder.insertInto("usr_external_identity")
+            .value("userId", userid)
+            .value("idType", "test")
+            .value("provider", "test")
+            .value("originalexternalid", "test")
+            .value("originalidtype", "test")
+            .value("originalprovider", "test")
+            .setConsistencyLevel(ConsistencyLevel.SERIAL);
+    batchStatement.add(userQuery);
+    batchStatement.add(userLookupQuery);
+    batchStatement.add(userOrgQuery);
+    batchStatement.add(userExternalIdentityQuery);
+    session.execute(batchStatement);
+    Response response = new Response();
+    response.put(Constants.RESPONSE, Constants.SUCCESS);
+    return response;
   }
 
   @Override
