@@ -89,6 +89,8 @@ public abstract class CassandraOperationImpl implements CassandraOperation {
     session.execute(batchStatement);
     Response response = new Response();
     response.put(Constants.RESPONSE, Constants.SUCCESS);
+    response.getResult().put(JsonKey.USER_ID, userid);
+    response.getResult().put(JsonKey.EMAIL, email);
     return response;
   }
 

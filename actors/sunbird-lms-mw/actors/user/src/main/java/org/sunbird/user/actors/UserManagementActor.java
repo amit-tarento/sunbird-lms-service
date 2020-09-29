@@ -674,8 +674,8 @@ public class UserManagementActor extends BaseActor {
    * @param actorMessage Request
    */
   private void createUser(Request actorMessage) {
-
-    cassandraOperation.batchInsert();
+    Response result = cassandraOperation.batchInsert();
+    sender().tell(result, self());
     /* Util.initializeContext(actorMessage, TelemetryEnvKey.USER);
     actorMessage.toLower();
     Map<String, Object> userMap = actorMessage.getRequest();
