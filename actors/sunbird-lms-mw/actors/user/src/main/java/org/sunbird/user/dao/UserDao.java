@@ -58,4 +58,7 @@ public interface UserDao {
    * @return User User Details.
    */
   User getUserById(String userId, RequestContext context);
+
+  List<Map<String, Object>> searchUserLookup(
+      String type, List<String> valueList, RequestContext context);
 }

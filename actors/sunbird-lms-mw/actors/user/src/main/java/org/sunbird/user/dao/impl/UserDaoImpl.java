@@ -98,4 +98,11 @@ public class UserDaoImpl implements UserDao {
     }
     return null;
   }
+
+  @Override
+  public List<Map<String, Object>> searchUserLookup(
+      String type, List<String> valueList, RequestContext context) {
+    Response response = cassandraOperation.searchUserLookupTable(type, valueList, context);
+    return (List<Map<String, Object>>) response.get(JsonKey.RESPONSE);
+  }
 }

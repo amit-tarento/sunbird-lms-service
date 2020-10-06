@@ -327,6 +327,12 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public List<Map<String, Object>> searchUserLookup(
+      String type, List<String> valueList, RequestContext context) {
+    return userDao.searchUserLookup(type, valueList, context);
+  }
+
+  @Override
   public String getCustodianOrgId(ActorRef actorRef, RequestContext context) {
     String custodianOrgId = "";
     try {

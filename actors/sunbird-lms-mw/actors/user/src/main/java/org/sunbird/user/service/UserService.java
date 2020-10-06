@@ -33,6 +33,9 @@ public interface UserService {
   List<Map<String, Object>> esSearchUserByFilters(
       Map<String, Object> filters, RequestContext context);
 
+  List<Map<String, Object>> searchUserLookup(
+      String type, List<String> valueList, RequestContext context);
+
   List<String> generateUsernames(
       String name, List<String> excludedUsernames, RequestContext context);
 

@@ -1335,4 +1335,26 @@ public abstract class CassandraOperationImpl implements CassandraOperation {
     Response response = CassandraUtil.createResponse(resultSet);
     return response;
   }
+
+  @Override
+  public Response searchUserLookupTable(
+      String type, List<String> valueList, RequestContext context) {
+    long startTime = System.currentTimeMillis();
+    Select selectQuery = QueryBuilder.select().all().from("sunbird", "user_lookup");
+
+    Clause clause = QueryBuilder.eq("type", type.toLowerCase());
+    Select.Where where = selectQuery.where(clause);
+    if (CollectionUtils.isNotEmpty(valueList)) {
+      Object[] propertyValues = valueList.toArray(new Object[valueList.size()]);
+      Clause clauseList = QueryBuilder.in("value", propertyValues);
+      where.and(clauseList);
+    }
+
+    if (null != selectQuery) {
+      logQueryElapseTime("searchValueInList", startTime, selectQuery.getQueryString(), context);
+    }
+    ResultSet resultSet = connectionManager.getSession("sunbird").execute(selectQuery);
+    Response response = CassandraUtil.createResponse(resultSet);
+    return response;
+  }
 }

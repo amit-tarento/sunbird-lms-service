@@ -579,4 +579,15 @@ public interface CassandraOperation {
       String column,
       String key,
       RequestContext context);
+
+  /**
+   * this method will be used to do search in userlookup table
+   *
+   * @param type
+   * @param valueList
+   * @param context
+   * @return
+   */
+  public Response searchUserLookupTable(
+      String type, List<String> valueList, RequestContext context);
 }

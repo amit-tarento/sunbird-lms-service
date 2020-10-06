@@ -477,7 +477,8 @@ public class UserUtil {
         List<String> filtersEncryptedUserNameList = new ArrayList<>(encryptedUserNameList);
         Map<String, Object> filters = new HashMap<>();
         filters.put(JsonKey.USERNAME, filtersEncryptedUserNameList);
-        users = userService.esSearchUserByFilters(filters, context);
+        users =
+            userService.searchUserLookup(JsonKey.USERNAME, filtersEncryptedUserNameList, context);
       } while (CollectionUtils.isNotEmpty(users) && users.size() >= encryptedUserNameList.size());
 
       esUserNameList.clear();
