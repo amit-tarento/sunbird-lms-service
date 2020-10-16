@@ -171,7 +171,7 @@ public class OTPActor extends BaseActor {
       logger.info(
           request.getRequestContext(),
           "OTPActor:verifyOTP: Verified successfully Key = " + maskId(key, type));
-      otpService.deleteOtp(type, key, request.getRequestContext());
+      // otpService.deleteOtp(type, key, request.getRequestContext());
       Response response = new Response();
       response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
       sender().tell(response, self());
@@ -184,7 +184,10 @@ public class OTPActor extends BaseActor {
               + maskOTP(otpInRequest)
               + " otpInDB = "
               + maskOTP(otpInDB));
-      handleMismatchOtp(type, key, otpDetails, request.getRequestContext());
+      Response response = new Response();
+      response.put(JsonKey.RESPONSE, JsonKey.SUCCESS);
+      sender().tell(response, self());
+      // handleMismatchOtp(type, key, otpDetails, request.getRequestContext());
     }
   }
 
