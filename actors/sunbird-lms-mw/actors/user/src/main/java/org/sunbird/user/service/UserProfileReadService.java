@@ -1,7 +1,5 @@
 package org.sunbird.user.service;
 
-import akka.dispatch.Futures;
-import akka.dispatch.Mapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -38,8 +36,6 @@ import org.sunbird.user.dao.impl.UserOrgDaoImpl;
 import org.sunbird.user.service.impl.UserExternalIdentityServiceImpl;
 import org.sunbird.user.service.impl.UserServiceImpl;
 import org.sunbird.user.util.UserUtil;
-import scala.concurrent.ExecutionContextExecutor;
-import scala.concurrent.Future;
 
 public class UserProfileReadService {
 
@@ -54,12 +50,6 @@ public class UserProfileReadService {
   private UserExternalIdentityService userExternalIdentityService =
       new UserExternalIdentityServiceImpl();
   private ObjectMapper mapper = new ObjectMapper();
-  private ExecutionContextExecutor executor;
-
-  public UserProfileReadService(ExecutionContextExecutor executor) {
-    super();
-    this.executor = executor;
-  }
 
   public Response getUserProfileData(Request actorMessage) {
     String id = (String) actorMessage.getRequest().get(JsonKey.USER_ID);
@@ -100,12 +90,10 @@ public class UserProfileReadService {
       ProjectCommonException.throwUnauthorizedErrorException();
     }
 
-    Future<Map<String, Object>> managedTokenFuture =
-        Futures.future(() -> getManagedToken(actorMessage, userId, result, managedBy), executor);
+    updateManagedToken(actorMessage, userId, result, managedBy);
 
     String requestFields = (String) actorMessage.getContext().get(JsonKey.FIELDS);
-    if (StringUtils.isNotBlank(userId)
-        && (userId.equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
+    if ((userId.equalsIgnoreCase(requestedById) || userId.equalsIgnoreCase(managedForId))
         && (StringUtils.isNotBlank(requestFields)
             && !requestFields.contains(JsonKey.EXTERNAL_IDS))) {
       result.put(
@@ -117,20 +105,12 @@ public class UserProfileReadService {
     }
     UserUtility.decryptUserDataFrmES(result);
     updateTnc(result);
-    managedTokenFuture.map(
-        new Mapper<Map<String, Object>, Map<String, Object>>() {
-          @Override
-          public Map<String, Object> apply(Map<String, Object> managedRes) {
-            return managedRes;
-          }
-        },
-        executor);
     Response response = new Response();
     response.put(JsonKey.RESPONSE, result);
     return response;
   }
 
-  private Map<String, Object> getManagedToken(
+  private void updateManagedToken(
       Request actorMessage, String userId, Map<String, Object> result, String managedBy) {
     boolean withTokens =
         Boolean.parseBoolean((String) actorMessage.getContext().get(JsonKey.WITH_TOKENS));
@@ -154,7 +134,6 @@ public class UserProfileReadService {
         result.put(JsonKey.MANAGED_TOKEN, managedToken);
       }
     }
-    return result;
   }
 
   private List<Map<String, Object>> fetchUserOrgList(String userId, RequestContext requestContext) {
