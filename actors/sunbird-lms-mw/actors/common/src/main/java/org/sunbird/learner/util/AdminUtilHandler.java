@@ -62,6 +62,12 @@ public class AdminUtilHandler {
                   + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT),
               body,
               headers);
+      logger.info(
+          context,
+          "AdminUtilHandler:fetchEncryptedToken Request for : url : "
+              + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_BASE_URL)
+              + ProjectUtil.getConfigValue(JsonKey.ADMINUTIL_SIGN_ENDPOINT));
+      logger.info(context, "AdminUtilHandler:fetchEncryptedToken Response: " + response);
       data = mapper.readValue(response, Map.class);
       if (MapUtils.isNotEmpty(data)) {
         data = (Map<String, Object>) data.get(JsonKey.RESULT);
