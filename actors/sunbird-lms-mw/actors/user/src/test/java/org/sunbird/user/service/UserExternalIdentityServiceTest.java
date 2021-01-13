@@ -29,7 +29,7 @@ import org.sunbird.user.util.UserUtil;
   ServiceFactory.class,
   CassandraOperationImpl.class,
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserExternalIdentityServiceTest {
 
   @Test

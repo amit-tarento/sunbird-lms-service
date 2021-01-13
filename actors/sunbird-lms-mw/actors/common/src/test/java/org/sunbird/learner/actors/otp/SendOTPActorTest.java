@@ -50,7 +50,7 @@ import org.sunbird.notification.utils.SMSFactory;
   EmailTemplateDaoImpl.class,
   SunbirdMWService.class
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 @SuppressStaticInitializationFor({
   "org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class",
   "org.sunbird.common.models.util.datasecurity.impl.DefaultDecryptionServiceImpl",

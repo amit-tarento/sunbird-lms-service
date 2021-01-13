@@ -49,7 +49,7 @@ import scala.concurrent.Promise;
   CassandraOperation.class,
   CassandraUtil.class,
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class IdentifierFreeUpActorTest {
   private ElasticSearchService elasticSearchService;
   public static CassandraOperation cassandraOperation;

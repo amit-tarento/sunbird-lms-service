@@ -52,7 +52,12 @@ import scala.concurrent.duration.FiniteDuration;
   DataCacheHandler.class,
   org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class
 })
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 @SuppressStaticInitializationFor("org.sunbird.common.ElasticSearchUtil")
 public class UserAssignRoleTest {
 

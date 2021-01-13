@@ -49,7 +49,7 @@ import org.sunbird.user.util.UserUtil;
   UserUtility.class,
   Util.class
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserProfileReadServiceTest {
 
   private String tncConfig =

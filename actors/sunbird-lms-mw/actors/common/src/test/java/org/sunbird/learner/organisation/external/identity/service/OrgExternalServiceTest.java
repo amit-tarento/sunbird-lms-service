@@ -29,7 +29,7 @@ import org.sunbird.learner.util.Util;
   CassandraOperation.class,
   CassandraUtil.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class OrgExternalServiceTest {
 
   private CassandraOperation cassandraOperation;

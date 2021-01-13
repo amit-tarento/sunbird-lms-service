@@ -45,7 +45,7 @@ import org.sunbird.user.actors.UserFeedActor;
   org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class
 })
 @SuppressStaticInitializationFor("org.sunbird.common.ElasticSearchUtil")
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserFeedActorTest {
   private static ActorSystem system = ActorSystem.create("system");
   private final Props props = Props.create(UserFeedActor.class);

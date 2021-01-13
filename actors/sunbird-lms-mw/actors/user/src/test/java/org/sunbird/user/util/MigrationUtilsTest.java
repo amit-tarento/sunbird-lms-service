@@ -27,7 +27,7 @@ import org.sunbird.user.service.impl.UserServiceImpl;
 @RunWith(PowerMockRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @PrepareForTest({UserServiceImpl.class, ServiceFactory.class, CassandraOperationImpl.class})
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class MigrationUtilsTest {
 
   private static Response response;

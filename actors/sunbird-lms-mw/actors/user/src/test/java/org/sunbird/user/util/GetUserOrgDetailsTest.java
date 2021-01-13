@@ -22,7 +22,7 @@ import org.sunbird.learner.util.Util;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceFactory.class, CassandraOperationImpl.class, Util.class})
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class GetUserOrgDetailsTest {
 
   @Test

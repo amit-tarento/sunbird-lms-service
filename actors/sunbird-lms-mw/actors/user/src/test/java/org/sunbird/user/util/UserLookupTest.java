@@ -34,7 +34,7 @@ import org.sunbird.models.user.User;
   DataCacheHandler.class,
   org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserLookupTest {
   public CassandraOperation cassandraOperation;
   private static User user;

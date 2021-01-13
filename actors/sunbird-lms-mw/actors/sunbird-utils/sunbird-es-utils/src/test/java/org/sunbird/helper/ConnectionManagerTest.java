@@ -19,7 +19,12 @@ import org.powermock.modules.junit4.PowerMockRunner;
 /** @author manzarul */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 @PrepareForTest({
   ConnectionManager.class,
   AcknowledgedResponse.class,

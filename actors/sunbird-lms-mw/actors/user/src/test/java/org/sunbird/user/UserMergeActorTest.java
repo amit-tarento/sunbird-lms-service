@@ -56,7 +56,7 @@ import org.sunbird.user.util.KafkaConfigConstants;
   Config.class,
   KafkaClient.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 @SuppressStaticInitializationFor("org.sunbird.kafka.client.KafkaClient")
 public class UserMergeActorTest {
   private static int userCounter;

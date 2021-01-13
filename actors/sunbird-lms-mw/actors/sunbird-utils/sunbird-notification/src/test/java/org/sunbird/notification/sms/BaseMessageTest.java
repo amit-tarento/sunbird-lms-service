@@ -2,7 +2,6 @@ package org.sunbird.notification.sms;
 
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.spy;
 
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,7 +9,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -25,14 +24,25 @@ import org.sunbird.notification.utils.SMSFactory;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
-@PrepareForTest({HttpClients.class, PropertiesCache.class, SMSFactory.class, Msg91SmsProviderFactory.class})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
+@PrepareForTest({
+  HttpClients.class,
+  PropertiesCache.class,
+  SMSFactory.class,
+  Msg91SmsProviderFactory.class
+})
 public abstract class BaseMessageTest {
 
-  @BeforeClass
-  public static void initMockRules() {
+  @Before
+  public void initMockRules() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse httpResp = mock(CloseableHttpResponse.class);
+    PropertiesCache propertiesCache = mock(PropertiesCache.class);
     StatusLine statusLine = mock(StatusLine.class);
     PowerMockito.mockStatic(HttpClients.class);
     try {
@@ -44,10 +54,8 @@ public abstract class BaseMessageTest {
       Assert.fail("Exception while mocking static " + e.getLocalizedMessage());
     }
 
-    PropertiesCache pc = spy(PropertiesCache.getInstance());
-    PowerMockito.mockStatic(PropertiesCache.class);
     try {
-      doReturn(pc).when(PropertiesCache.class, "getInstance");
+      PowerMockito.when(propertiesCache.getProperty(Mockito.anyString())).thenReturn("anyString");
     } catch (Exception e) {
       Assert.fail("Exception while mocking static " + e.getLocalizedMessage());
     }

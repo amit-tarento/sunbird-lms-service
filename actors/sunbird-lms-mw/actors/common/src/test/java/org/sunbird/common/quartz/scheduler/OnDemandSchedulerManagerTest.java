@@ -18,7 +18,7 @@ import org.quartz.SchedulerException;
 @PrepareForTest({
   SchedulerManager.class,
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class OnDemandSchedulerManagerTest {
 
   static OnDemandSchedulerManager onDemandSchedulerManager;

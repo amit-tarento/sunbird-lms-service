@@ -38,7 +38,7 @@ import org.sunbird.learner.util.Util;
 /** @author arvind. Junit test cases for bulk upload - user, org */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceFactory.class, Util.class, BulkUploadManagementActor.class})
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class BulkUploadManagementActorTest {
 
   private static ActorSystem system;

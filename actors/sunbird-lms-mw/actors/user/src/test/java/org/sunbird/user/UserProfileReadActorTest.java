@@ -78,7 +78,7 @@ import scala.concurrent.Promise;
   UserDao.class,
   UserUtility.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserProfileReadActorTest {
 
   private ActorSystem system = ActorSystem.create("system");

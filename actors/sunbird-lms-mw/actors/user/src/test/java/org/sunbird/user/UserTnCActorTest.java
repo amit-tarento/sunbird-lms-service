@@ -57,7 +57,13 @@ import scala.concurrent.Promise;
   DataCacheHandler.class,
   UserTncService.class
 })
-@PowerMockIgnore({"javax.management.*", "javax.crypto.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.crypto.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class UserTnCActorTest {
   private static ActorSystem system;
   private String tncConfig =

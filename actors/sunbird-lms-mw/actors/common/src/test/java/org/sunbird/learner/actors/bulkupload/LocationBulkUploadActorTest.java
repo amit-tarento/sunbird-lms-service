@@ -50,7 +50,7 @@ import org.sunbird.learner.util.Util;
   BulkUploadProcessDaoImpl.class,
   LocationBulkUploadBackGroundJobActor.class
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 @RunWith(PowerMockRunner.class)
 public class LocationBulkUploadActorTest {
 

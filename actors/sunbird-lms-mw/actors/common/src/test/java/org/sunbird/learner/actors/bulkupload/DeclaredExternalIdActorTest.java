@@ -43,7 +43,7 @@ import org.sunbird.models.organisation.Organisation;
   SunbirdMWService.class,
   OrganisationClientImpl.class,
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class DeclaredExternalIdActorTest {
   private static final Props props = Props.create(DeclaredExternalIdActor.class);
   private static ActorSystem system = ActorSystem.create("system");

@@ -41,7 +41,7 @@ import org.sunbird.telemetry.util.TelemetryWriter;
   org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class
 })
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserBulkMigrationActorTest {
   private static ActorSystem system;
   private static final Props props = Props.create(UserBulkMigrationActor.class);

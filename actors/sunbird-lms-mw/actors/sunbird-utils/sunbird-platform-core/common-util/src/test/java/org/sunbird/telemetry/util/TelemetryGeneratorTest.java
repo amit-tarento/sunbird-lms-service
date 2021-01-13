@@ -14,7 +14,12 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import org.sunbird.common.models.util.JsonKey;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class TelemetryGeneratorTest {
 
   private static Map<String, Object> context;

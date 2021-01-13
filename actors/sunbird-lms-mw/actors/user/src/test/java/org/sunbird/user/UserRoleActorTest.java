@@ -69,7 +69,7 @@ import scala.concurrent.duration.Duration;
   OrgServiceImpl.class,
   OrgService.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserRoleActorTest {
 
   private ActorSystem system = ActorSystem.create("system");

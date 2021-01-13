@@ -40,7 +40,7 @@ import org.sunbird.user.util.UserUtil;
   ElasticSearchRestHighImpl.class,
   DataCacheHandler.class
 })
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserTncServiceTest {
   private String tncConfig =
       "{\"latestVersion\":\"V1\",\"v1\":{\"url\":\"http://dev/terms.html\"},\"v2\":{\"url\":\"http://dev/terms.html\"},\"v4\":{\"url\":\"http://dev/terms.html\"}}";

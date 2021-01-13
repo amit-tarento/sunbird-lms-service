@@ -55,7 +55,12 @@ import org.sunbird.common.models.util.JsonKey;
   EntityUtils.class,
   HttpClientUtil.class
 })
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class FCMNotificationTest {
 
   private CloseableHttpClient httpclient;

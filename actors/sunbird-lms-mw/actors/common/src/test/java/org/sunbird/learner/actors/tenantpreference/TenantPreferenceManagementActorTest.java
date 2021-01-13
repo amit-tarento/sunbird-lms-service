@@ -8,7 +8,10 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
 import akka.testkit.javadsl.TestKit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -44,7 +47,13 @@ import org.sunbird.learner.util.Util;
   DecryptionService.class,
   DataCacheHandler.class,
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.crypto.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class TenantPreferenceManagementActorTest {
 
   private ActorSystem system = ActorSystem.create("system");

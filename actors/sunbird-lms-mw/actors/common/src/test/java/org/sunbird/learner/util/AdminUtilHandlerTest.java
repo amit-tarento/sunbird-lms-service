@@ -23,7 +23,12 @@ import org.sunbird.models.adminutil.AdminUtilRequestPayload;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HttpClientUtil.class, AdminUtilHandlerTest.class})
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class AdminUtilHandlerTest {
 
   @Before

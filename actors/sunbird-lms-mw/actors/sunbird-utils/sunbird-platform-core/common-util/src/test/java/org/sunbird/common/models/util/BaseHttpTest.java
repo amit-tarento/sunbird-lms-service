@@ -23,7 +23,12 @@ import org.sunbird.common.util.KeycloakRequiredActionLinkUtil;
 import org.sunbird.services.sso.impl.KeyCloakServiceImpl;
 
 @RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 @PrepareForTest({
   OutputStreamWriter.class,
   URL.class,

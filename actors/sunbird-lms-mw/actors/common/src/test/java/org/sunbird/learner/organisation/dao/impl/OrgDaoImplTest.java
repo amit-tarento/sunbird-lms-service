@@ -43,7 +43,7 @@ import scala.concurrent.Promise;
   EsClientFactory.class,
   Util.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class OrgDaoImplTest {
 
   private CassandraOperation cassandraOperation;

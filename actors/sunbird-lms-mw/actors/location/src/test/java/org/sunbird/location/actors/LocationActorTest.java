@@ -46,7 +46,12 @@ import scala.concurrent.Promise;
   EsClientFactory.class,
   ElasticSearchHelper.class
 })
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class LocationActorTest {
 
   private static final ActorSystem system = ActorSystem.create("system");

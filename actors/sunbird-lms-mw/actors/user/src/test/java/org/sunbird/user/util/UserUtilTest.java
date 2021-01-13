@@ -52,7 +52,7 @@ import scala.concurrent.Promise;
   EncryptionService.class,
   org.sunbird.common.models.util.datasecurity.impl.ServiceFactory.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserUtilTest {
   private static Response response;
   public static CassandraOperationImpl cassandraOperationImpl;

@@ -73,7 +73,7 @@ import scala.concurrent.Promise;
   UserClientImpl.class,
   OrganisationClientImpl.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public abstract class UserManagementActorTestBase {
 
   public ActorSystem system = ActorSystem.create("system");

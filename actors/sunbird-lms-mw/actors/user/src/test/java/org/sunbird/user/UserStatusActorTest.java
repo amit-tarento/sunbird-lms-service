@@ -40,7 +40,7 @@ import org.sunbird.user.service.impl.UserServiceImpl;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({UserServiceImpl.class, KeyCloakConnectionProvider.class, ServiceFactory.class})
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserStatusActorTest {
 
   private static final Props props = Props.create(UserStatusActor.class);

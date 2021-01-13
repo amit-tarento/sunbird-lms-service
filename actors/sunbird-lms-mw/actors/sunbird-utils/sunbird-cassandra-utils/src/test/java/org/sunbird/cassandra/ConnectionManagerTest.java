@@ -40,7 +40,7 @@ import org.sunbird.helper.CassandraConnectionMngrFactory;
                                         CassandraUtil.class,
                                         CassandraConnectionMngrFactory.class,
                                       })
-                                      @PowerMockIgnore("javax.management.*")
+                                      @PowerMockIgnore({"jdk.internal.reflect.*","javax.management.*"})
                                       public class ConnectionManagerTest {
 
                                         private static PropertiesCache cach = PropertiesCache.getInstance();

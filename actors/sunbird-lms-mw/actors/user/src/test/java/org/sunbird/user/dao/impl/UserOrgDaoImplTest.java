@@ -25,7 +25,7 @@ import org.sunbird.user.dao.UserOrgDao;
   ServiceFactory.class,
   CassandraOperationImpl.class,
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserOrgDaoImplTest {
 
   private static CassandraOperation cassandraOperationImpl = null;

@@ -23,7 +23,7 @@ import org.sunbird.user.actors.UserTypeActor;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({KeyCloakConnectionProvider.class})
-@PowerMockIgnore("javax.management.*")
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class UserTypeActorTest {
 
   private static ActorSystem system = ActorSystem.create("system");

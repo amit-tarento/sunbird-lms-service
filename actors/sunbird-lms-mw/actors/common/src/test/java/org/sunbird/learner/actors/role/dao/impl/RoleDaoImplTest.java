@@ -31,7 +31,7 @@ import org.sunbird.models.role.Role;
   CassandraOperation.class,
   CassandraUtil.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class RoleDaoImplTest {
   private static final String TABLE_NAME = "role";
   private CassandraOperation cassandraOperation;

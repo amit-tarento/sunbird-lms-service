@@ -44,7 +44,13 @@ import scala.concurrent.Promise;
   ElasticSearchRestHighImpl.class,
   EsClientFactory.class
 })
-@PowerMockIgnore({"javax.management.*", "javax.crypto.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.crypto.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class NotesManagementActorTest {
 
   private static String userId = "userId-example";
@@ -235,19 +241,24 @@ public class NotesManagementActorTest {
 
   @Test
   public void testGetNoteFailureWithInvalidNoteId() {
+    ElasticSearchService esUtil = mock(ElasticSearchRestHighImpl.class);
+    PowerMockito.mockStatic(EsClientFactory.class);
+    when(EsClientFactory.getInstance(Mockito.anyString())).thenReturn(esUtil);
     Request req = new Request();
     Map<String, Object> reqMap = new HashMap<>();
-    req.getContext().put(JsonKey.REQUESTED_BY, userId);
-    req.getContext().put(JsonKey.NOTE_ID, noteId);
-    reqMap.put(JsonKey.USER_ID, userId);
+    req.getContext().put(JsonKey.REQUESTED_BY, "userId");
+    req.getContext().put(JsonKey.NOTE_ID, "noteId");
+    reqMap.put(JsonKey.USER_ID, "userId");
     reqMap.put(JsonKey.COUNT, 0L);
     req.setRequest(reqMap);
     Promise<Map<String, Object>> promise = Futures.promise();
     promise.success(reqMap);
+    Promise<Map<String, Object>> promise2 = Futures.promise();
+    promise2.success(reqMap);
     when(esUtil.getDataByIdentifier(Mockito.anyString(), Mockito.anyString(), Mockito.any()))
         .thenReturn(promise.future());
     when(esUtil.search(Mockito.any(), Mockito.anyString(), Mockito.any(RequestContext.class)))
-        .thenReturn(promise.future());
+        .thenReturn(promise2.future());
     req.setOperation(ActorOperations.GET_NOTE.getValue());
     boolean result = testScenario(req, ResponseCode.invalidNoteId);
     assertTrue(result);

@@ -20,7 +20,12 @@ import org.sunbird.systemsettings.dao.SystemSettingDao;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({CassandraOperationImpl.class})
-@PowerMockIgnore({"javax.management.*", "javax.net.ssl.*", "javax.security.*"})
+@PowerMockIgnore({
+  "jdk.internal.reflect.*",
+  "javax.management.*",
+  "javax.net.ssl.*",
+  "javax.security.*"
+})
 public class SystemSettingDaoImplTest {
   private CassandraOperation cassandraOperation;
   private SystemSettingDao systemSettingDaoImpl;

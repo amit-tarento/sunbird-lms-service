@@ -44,7 +44,7 @@ import org.sunbird.user.service.impl.UserServiceImpl;
   DefaultDecryptionServiceImpl.class,
   DefaultDataMaskServiceImpl.class
 })
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class CertificateActorTest {
   public static CassandraOperationImpl cassandraOperationImpl;
   public static UserServiceImpl userServiceImpl;

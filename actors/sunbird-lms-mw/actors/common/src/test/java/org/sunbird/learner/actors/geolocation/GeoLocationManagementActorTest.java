@@ -37,7 +37,7 @@ import org.sunbird.learner.util.Util;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ServiceFactory.class, Util.class, DataCacheHandler.class})
-@PowerMockIgnore({"javax.management.*"})
+@PowerMockIgnore({"jdk.internal.reflect.*", "javax.management.*"})
 public class GeoLocationManagementActorTest {
 
   private ActorSystem system = ActorSystem.create("system");
