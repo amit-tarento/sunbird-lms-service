@@ -2,16 +2,12 @@
 		xmlns="http://maven.apache.org/POM/4.0.0"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<parent>
-		<groupId>org.sunbird</groupId>
-		<artifactId>lms-service</artifactId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>learning-service</artifactId>
-	<version>1.0-SNAPSHOT</version>
-
-	<packaging>play2</packaging>
+    <groupId>org.sunbird</groupId>
+    <artifactId>learning-service</artifactId>
+    <name>learning-service</name>
+    <packaging>play2</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
 
 	<repositories>
 		<repository>
@@ -249,49 +245,91 @@
           <version>6.3</version>
         </dependency>
     </dependencies>
-	<build>
-		<sourceDirectory>${basedir}/app</sourceDirectory>
-		<testSourceDirectory>${basedir}/test</testSourceDirectory>
-		<resources>
-			<resource>
-				<directory>${basedir}/conf</directory>
-			</resource>
-		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                  <release>11</release>
-                </configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.google.code.play2-maven-plugin</groupId>
-				<artifactId>play2-maven-plugin</artifactId>
-				<version>${play2.plugin.version}</version>
-				<extensions>true</extensions>
-			</plugin>
-			<plugin>
-				<groupId>com.google.code.sbt-compiler-maven-plugin</groupId>
-				<artifactId>sbt-compiler-maven-plugin</artifactId>
-				<version>${sbt-compiler.plugin.version}</version>
-				<configuration>
-					<scalacOptions>-feature -deprecation -Xfatal-warnings</scalacOptions>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M4</version>
-				<configuration>
-					<includes>
-						<include>**/*Spec.java</include>
-						<include>**/*Test.java</include>
-					</includes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    <build>
+      <sourceDirectory>${basedir}/app</sourceDirectory>
+      <testSourceDirectory>${basedir}/test</testSourceDirectory>
+      <resources>
+        <resource>
+          <directory>${basedir}/conf</directory>
+        </resource>
+      </resources>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.1</version>
+          <configuration>
+            <release>11</release>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.google.code.play2-maven-plugin</groupId>
+          <artifactId>play2-maven-plugin</artifactId>
+          <version>${play2.plugin.version}</version>
+          <extensions>true</extensions>
+        </plugin>
+        <plugin>
+          <groupId>com.google.code.sbt-compiler-maven-plugin</groupId>
+          <artifactId>sbt-compiler-maven-plugin</artifactId>
+          <version>${sbt-compiler.plugin.version}</version>
+          <configuration>
+            <scalacOptions>-feature -deprecation -Xfatal-warnings</scalacOptions>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>3.0.0-M4</version>
+          <configuration>
+            <includes>
+              <include>**/*Spec.java</include>
+              <include>**/*Test.java</include>
+            </includes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.8.5</version>
+          <configuration>
+            <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+            <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
+            <excludes>
+              <exclude>**/common/**</exclude>
+              <exclude>**/router/**</exclude>
+              <exclude>**/Reverse*/**</exclude>
+              <exclude>**/routes.*</exclude>
+              <exclude>**/routes$javascript.**</exclude>
+            </excludes>
+          </configuration>
+          <executions>
+            <execution>
+              <id>jacoco-initialize</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>jacoco-site</id>
+              <phase>package</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>default-check</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <rules>
+
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
 </project>
 

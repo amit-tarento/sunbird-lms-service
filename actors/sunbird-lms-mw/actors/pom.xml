@@ -2,20 +2,19 @@
 <project
 		xmlns="http://maven.apache.org/POM/4.0.0"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<parent>
-		<artifactId>sunbird-lms-mw</artifactId>
-		<groupId>org.sunbird</groupId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
-	<groupId>org.sunbird</groupId>
-	<version>1.0-SNAPSHOT</version>
-	<modelVersion>4.0.0</modelVersion>
-	<artifactId>mw-actors</artifactId>
-	<packaging>pom</packaging>
-	<name>Middleware Actors</name>
-	<properties>
-		<learner.akka.version>2.5.19</learner.akka.version>
-	</properties>
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+      <groupId>org.sunbird</groupId>
+      <artifactId>sunbird-lms-mw</artifactId>
+      <version>1.0-SNAPSHOT</version>
+      <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>mw-actors</artifactId>
+    <packaging>pom</packaging>
+    <name>Middleware Actors</name>
+    <properties>
+      <learner.akka.version>2.5.19</learner.akka.version>
+    </properties>
 	<modules>
 		<module>common</module>
 		<module>user</module>
