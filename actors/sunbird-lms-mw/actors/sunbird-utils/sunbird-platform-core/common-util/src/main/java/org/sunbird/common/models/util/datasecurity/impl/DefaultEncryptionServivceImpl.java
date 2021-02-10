@@ -1,11 +1,8 @@
 /** */
 package org.sunbird.common.models.util.datasecurity.impl;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +10,6 @@ import java.util.Map.Entry;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.commons.lang3.StringUtils;
 import org.sunbird.common.exception.ProjectCommonException;
@@ -108,23 +104,17 @@ public class DefaultEncryptionServivceImpl implements EncryptionService {
    *
    * @param value String password
    * @return encrypted password.
-   * @throws NoSuchPaddingException
-   * @throws NoSuchAlgorithmException
-   * @throws InvalidKeyException
-   * @throws BadPaddingException
    * @throws IllegalBlockSizeException
-   * @throws UnsupportedEncodingException
+   * @throws BadPaddingException
    */
   @SuppressWarnings("restriction")
-  public static String encrypt(String value)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException,
-          IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
+  public static String encrypt(String value) throws IllegalBlockSizeException, BadPaddingException {
     String valueToEnc = null;
     String eValue = value;
     for (int i = 0; i < ITERATIONS; i++) {
       valueToEnc = encryption_key + eValue;
       byte[] encValue = c.doFinal(valueToEnc.getBytes(StandardCharsets.UTF_8));
-      eValue = new sun.misc.BASE64Encoder().encode(encValue);
+      eValue = new BASE64Encoder().encode(encValue);
     }
     return eValue;
   }
