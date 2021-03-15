@@ -125,14 +125,13 @@ public class OrganisationManagementActor extends BaseActor {
         ProjectCommonException.throwClientErrorException(ResponseCode.emailFormatError);
       }
       validateOrgType((String) request.get(JsonKey.ORG_TYPE), JsonKey.CREATE);
-      channelMandatoryValidation(request);
-      validateChannel(request, actorMessage.getRequestContext());
-
-      Boolean isRootOrg = (Boolean) request.get(JsonKey.IS_ROOT_ORG);
 
       if (request.containsKey(JsonKey.CHANNEL)) {
         String slug = Slug.makeSlug((String) request.getOrDefault(JsonKey.CHANNEL, ""), true);
-        if (null != isRootOrg && isRootOrg) {
+        Boolean isTenant = (Boolean) request.get(JsonKey.IS_TENANT);
+        if (null != isTenant && isTenant) {
+          // Check channel uniqueness for tenant org(isTenant = true)
+          validateChannel(request, actorMessage.getRequestContext());
           boolean bool = isSlugUnique(slug, actorMessage.getRequestContext());
           if (bool) {
             request.put(JsonKey.SLUG, slug);
@@ -1012,17 +1011,6 @@ public class OrganisationManagementActor extends BaseActor {
         orgDbInfo.getKeySpace(), orgDbInfo.getTableName(), addressReq, null);
   }
 
-  // Check whether channel value is present
-  public void channelMandatoryValidation(Map<String, Object> request) {
-    if (StringUtils.isBlank((String) request.get(JsonKey.CHANNEL))) {
-      throw new ProjectCommonException(
-          ResponseCode.mandatoryParamsMissing.getErrorCode(),
-          MessageFormat.format(
-              ResponseCode.mandatoryParamsMissing.getErrorMessage(), JsonKey.CHANNEL),
-          ResponseCode.CLIENT_ERROR.getResponseCode());
-    }
-  }
-
   /**
    * Validates whether the organisation or source with externalId exists in DB
    *
@@ -1285,43 +1273,13 @@ public class OrganisationManagementActor extends BaseActor {
   }
 
   /**
-   * This method will do the channel uniqueness validation
+   * This method will do the channel uniqueness
    *
    * @param req
    */
   private void validateChannel(Map<String, Object> req, RequestContext context) {
-    // this if will run for suborg creation, it will fetch
-    // rootOrgId from passed channel value.
-    if (!req.containsKey(JsonKey.IS_ROOT_ORG) || !(Boolean) req.get(JsonKey.IS_ROOT_ORG)) {
-      String channel = (String) req.get(JsonKey.CHANNEL);
-
-      Map<String, Object> rootOrg = getRootOrgFromChannel(channel, context);
-      if (MapUtils.isEmpty(rootOrg)) {
-        logger.info(
-            context, "OrganisationManagementActor:validateChannel: Invalid channel = " + channel);
-        throw new ProjectCommonException(
-            ResponseCode.invalidChannel.getErrorCode(),
-            ResponseCode.invalidChannel.getErrorMessage(),
-            ResponseCode.CLIENT_ERROR.getResponseCode());
-      }
-      String rootOrgId = (String) rootOrg.get(JsonKey.ID);
-      if (StringUtils.isBlank(rootOrgId)) {
-        logger.info(
-            context, "OrganisationManagementActor:validateChannel: Invalid channel = " + channel);
-        throw new ProjectCommonException(
-            ResponseCode.invalidChannel.getErrorCode(),
-            ResponseCode.invalidChannel.getErrorMessage(),
-            ResponseCode.CLIENT_ERROR.getResponseCode());
-      }
-      Object status = rootOrg.get(JsonKey.STATUS);
-      if (null != status && 1 != (Integer) status) {
-        ProjectCommonException.throwClientErrorException(
-            ResponseCode.errorInactiveOrg,
-            ProjectUtil.formatMessage(
-                ResponseCode.errorInactiveOrg.getErrorMessage(), JsonKey.CHANNEL, channel));
-      }
-      req.put(JsonKey.ROOT_ORG_ID, rootOrgId);
-    } else if (!validateChannelUniqueness((String) req.get(JsonKey.CHANNEL), null, context)) {
+    if ((req.containsKey(JsonKey.IS_TENANT) && (Boolean) req.get(JsonKey.IS_TENANT))
+        && !validateChannelUniqueness((String) req.get(JsonKey.CHANNEL), null, context)) {
       logger.info(
           context, "OrganisationManagementActor:validateChannel: Channel validation failed");
       throw new ProjectCommonException(
