@@ -75,11 +75,12 @@ public class UserProfileReadService {
     }
     Map<String, Object> result =
         validateUserIdAndGetUserDetails(userId, actorMessage.getRequestContext());
-    appendUserTypeAndLocation(result,actorMessage.getRequestContext());
-    result.put(
-        JsonKey.ROOT_ORG,
+    appendUserTypeAndLocation(result, actorMessage.getRequestContext());
+    Map<String, Object> rootOrg =
         orgDao.getOrgById(
-            (String) result.get(JsonKey.ROOT_ORG_ID), actorMessage.getRequestContext()));
+            (String) result.get(JsonKey.ROOT_ORG_ID), actorMessage.getRequestContext());
+    rootOrg.put(JsonKey.ROOT_ORG_ID, rootOrg.get(JsonKey.ID));
+    result.put(JsonKey.ROOT_ORG, rootOrg);
     result.put(
         JsonKey.ORGANISATIONS,
         fetchUserOrgList((String) result.get(JsonKey.USER_ID), actorMessage.getRequestContext()));
@@ -114,12 +115,12 @@ public class UserProfileReadService {
       addExtraFieldsInUserProfileResponse(result, requestFields, actorMessage.getRequestContext());
     }
     String encEmail = (String) result.get(JsonKey.EMAIL);
-    String encPhone= (String) result.get(JsonKey.PHONE);
+    String encPhone = (String) result.get(JsonKey.PHONE);
 
     UserUtility.decryptUserDataFrmES(result);
-    //Its used for Private user read api to display encoded email and encoded phone in api response
+    // Its used for Private user read api to display encoded email and encoded phone in api response
     boolean isPrivate = (boolean) actorMessage.getContext().get(JsonKey.PRIVATE);
-    if(isPrivate) {
+    if (isPrivate) {
       result.put((JsonKey.ENC_PHONE), encPhone);
       result.put((JsonKey.ENC_EMAIL), encEmail);
     }
@@ -139,32 +140,37 @@ public class UserProfileReadService {
     response.put(JsonKey.RESPONSE, result);
     return response;
   }
-  public void appendUserTypeAndLocation(Map<String, Object> result,RequestContext context){
+
+  public void appendUserTypeAndLocation(Map<String, Object> result, RequestContext context) {
     Map<String, Object> userTypeDetails = new HashMap<>();
     try {
-      userTypeDetails = mapper.readValue((String) result.get(JsonKey.PROFILE_USERTYPE), new TypeReference<Map<String, Object>>() {});
+      userTypeDetails =
+          mapper.readValue(
+              (String) result.get(JsonKey.PROFILE_USERTYPE),
+              new TypeReference<Map<String, Object>>() {});
     } catch (Exception e) {
-      logger.error(
-              context, "Exception because of mapper read value" ,e);
+      logger.error(context, "Exception because of mapper read value", e);
     }
     if (MapUtils.isNotEmpty(userTypeDetails)) {
       result.put(JsonKey.USER_TYPE, userTypeDetails.get(JsonKey.TYPE));
       result.put(JsonKey.USER_SUB_TYPE, userTypeDetails.get(JsonKey.SUB_TYPE));
-    }else{
+    } else {
       result.put(JsonKey.USER_TYPE, null);
       result.put(JsonKey.USER_SUB_TYPE, null);
     }
-    result.put(JsonKey.PROFILE_USERTYPE,userTypeDetails);
+    result.put(JsonKey.PROFILE_USERTYPE, userTypeDetails);
 
-    List<Map<String, String>> userLocList=new ArrayList<>();
+    List<Map<String, String>> userLocList = new ArrayList<>();
     try {
-      userLocList = mapper.readValue((String) result.get(JsonKey.PROFILE_LOCATION), new TypeReference <List<Map<String, String>>>() {});
+      userLocList =
+          mapper.readValue(
+              (String) result.get(JsonKey.PROFILE_LOCATION),
+              new TypeReference<List<Map<String, String>>>() {});
 
-    }catch (Exception ex){
+    } catch (Exception ex) {
       logger.error(context, "Exception occurred while mapping", ex);
     }
-    result.put(JsonKey.PROFILE_LOCATION,userLocList);
-
+    result.put(JsonKey.PROFILE_LOCATION, userLocList);
   }
 
   private void appendMinorFlag(Map<String, Object> result) {
@@ -465,11 +471,12 @@ public class UserProfileReadService {
         result.put(JsonKey.ROLE_LIST, DataCacheHandler.getUserReadRoleList());
       }
       if (fields.contains(JsonKey.LOCATIONS)) {
-        List<Map<String, String>> userLocList=(List<Map<String, String>>)result.get(JsonKey.PROFILE_LOCATION);
-        if(CollectionUtils.isNotEmpty(userLocList)) {
-          List<String> locationIds = userLocList.stream().map(m -> m.get(JsonKey.ID)).collect(Collectors.toList());
-          List<Map<String, Object>> userLocations =
-                  getUserLocations(locationIds, context);
+        List<Map<String, String>> userLocList =
+            (List<Map<String, String>>) result.get(JsonKey.PROFILE_LOCATION);
+        if (CollectionUtils.isNotEmpty(userLocList)) {
+          List<String> locationIds =
+              userLocList.stream().map(m -> m.get(JsonKey.ID)).collect(Collectors.toList());
+          List<Map<String, Object>> userLocations = getUserLocations(locationIds, context);
           if (CollectionUtils.isNotEmpty(userLocations)) {
             result.put(JsonKey.USER_LOCATIONS, userLocations);
             addSchoolLocation(result, context);
