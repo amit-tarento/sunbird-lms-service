@@ -55,7 +55,9 @@ public class OnRequestHandler implements ActionCreator {
         if (result != null) return result;
         // From 3.0.0 checking user access-token and managed-by from the request header
         Map userAuthentication = RequestInterceptor.verifyRequestData(request);
+        logger.info("user token details: " + userAuthentication);
         String message = (String) userAuthentication.get(JsonKey.USER_ID);
+        logger.info("user token userId: " + message);
         if (userAuthentication.get(JsonKey.MANAGED_FOR) != null) {
           request =
               request.addAttr(

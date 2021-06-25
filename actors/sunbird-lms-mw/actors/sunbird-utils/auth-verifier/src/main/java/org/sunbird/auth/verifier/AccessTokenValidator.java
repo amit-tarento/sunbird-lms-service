@@ -22,16 +22,21 @@ public class AccessTokenValidator {
     Map<Object, Object> headerData =
         mapper.readValue(new String(decodeFromBase64(header)), Map.class);
     String keyId = headerData.get("kid").toString();
+    logger.info("token kid : " + keyId);
+    logger.info("public key " + KeyManager.getPublicKey(keyId).getPublicKey());
     boolean isValid =
         CryptoUtil.verifyRSASign(
             payLoad,
             decodeFromBase64(signature),
             KeyManager.getPublicKey(keyId).getPublicKey(),
             JsonKey.SHA_256_WITH_RSA);
+    logger.info("Token validity : " + isValid);
     if (isValid) {
       Map<String, Object> tokenBody =
           mapper.readValue(new String(decodeFromBase64(body)), Map.class);
+      logger.info("Token body : " + tokenBody);
       boolean isExp = isExpired((Integer) tokenBody.get("exp"));
+      logger.info("Token expiry : " + isExp);
       if (isExp) {
         return Collections.EMPTY_MAP;
       }
@@ -82,9 +87,11 @@ public class AccessTokenValidator {
   public static String verifyUserToken(String token) {
     String userId = JsonKey.UNAUTHORIZED;
     try {
+      logger.info("Token received to verify : " + token);
       Map<String, Object> payload = validateToken(token);
       if (MapUtils.isNotEmpty(payload) && checkIss((String) payload.get("iss"))) {
         userId = (String) payload.get(JsonKey.SUB);
+        logger.info("Token sub : " + userId);
         if (StringUtils.isNotBlank(userId)) {
           int pos = userId.lastIndexOf(":");
           userId = userId.substring(pos + 1);

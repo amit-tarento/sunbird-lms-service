@@ -125,7 +125,9 @@ public class RequestInterceptor {
     if (!isRequestInExcludeList(request.path()) && !isRequestPrivate(request.path())) {
       // The API must be invoked with either access token or client token.
       if (accessToken.isPresent()) {
+        logger.info("user token : " + accessToken.get());
         clientId = AccessTokenValidator.verifyUserToken(accessToken.get());
+        logger.info("verified user token : " + clientId);
         if (!JsonKey.USER_UNAUTH_STATES.contains(clientId)) {
           // Now we have some valid token, next verify if the token is matching the request.
           String requestedForUserID = getUserRequestedFor(request);
